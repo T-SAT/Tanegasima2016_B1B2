@@ -1,0 +1,46 @@
+((("indent-whole-buffer" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0])
+  ("indent-region" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 1])
+  ("mark-whole-buffer" .
+   [0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("defun" .
+   [1 0 0 0 0])
+  ("undo-strong-limit" .
+   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0])
+  ("undo-limit" .
+   [1 0 0 0 0 0 0 0 0 0])
+  ("redo+" .
+   [1 0 0 0 0])
+  ("gdb" .
+   [1 0 0])
+  ("require" .
+   [4 0 0 1 1 0 5])
+  ("requires-pattern" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1])
+  ("add-hook" .
+   [0 0 0 0 0 0 0 2])
+  ("c-turn-on-eldoc-mode" .
+   [0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("flycheck" .
+   [0 0 0 0 0 0 0 2])
+  ("global-set-key" .
+   [0 0 0 0 0 0 0 0 0 0 1 0 0 2])
+  ("kbd" .
+   [4 0 0])
+  ("anything" .
+   [1 0 0 0 0 0 0 0])
+  ("load" .
+   [5 0 0 0])
+  ("setq" .
+   [4 0 0 0])
+  ("windmove-" .
+   [0 0 0 0 0 0 0 0 1])
+  ("windmove-default-keybindings" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("change-buffer" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("arduino-mode" .
+   [1 0 0 0 0 0 0 0 0 0 0 0])
+  ("flycheck-add-next-checker" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0])))

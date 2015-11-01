@@ -1,0 +1,164 @@
+;;;;;;;;;;;;;;;;;;パス通し;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (> emacs-major-version 23)
+  (defvar user-emacs-directory "~/.emacs.d"))
+
+(defun add-to-load-path (&rest paths)
+  (let (path)
+    (dolist (path paths paths)
+      (let ((default-directory
+	      (expand-file-name (concat user-emacs-directory path))))
+	(add-to-list 'load-path default-directory)
+	(if (fboundp 'normal-top-level-add-subdirs-to-load-path)
+	    (normal-top-level-add-subdirs-to-load-path))))))
+
+(add-to-load-path "elisp" "conf" "public_repos" "etc")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;カラム表示
+(column-number-mode t)
+
+;;バックアップファイルを./backupsに保存
+(setq save-backupfiles-current-directory t)
+;;対応するカッコを赤のアンダーラインで強調
+(setq show-paren-delay 0)
+(show-paren-mode t)
+(setq show-paren-style 'expression)
+(set-face-background 'show-paren-match-face nil)
+(set-face-underline-p 'show-paren-match-face "red")
+
+;;ウェルカムウィンドウを表示しない
+(setq inhibit-startup-message t)
+
+;;auto-installの設定
+(when (require 'auto-install nil t)
+  (setq auto-install-directory "~/.emacs.d/elisp/")
+  (auto-install-update-emacswiki-package-name t)
+  (auto-install-compatibility-setup))
+
+;;packageの設定
+(when (require 'package nil t)
+  (add-to-list 'package-archives
+	       '("marmalade" . "http://marmalade-repo.org/packages/"))
+  (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/"))
+  (package-initialize))
+
+;;anythingの設定
+(load "anything")
+(when (require 'anything nil t)
+  (setq
+   anything-idle-delay 0.3
+   anything-input-idle-delay 0.2
+   anything-candidate-number-limit 100
+   anything-quick-update t
+   anything-enable-shortcuts 'alphabet)
+  (require 'anything-match-plugin nil t)
+  (when (and (executable-find "cmigemo")
+ 	     (require 'migemo nil t))
+    (require 'anything-migemo nil t))
+  (when (require 'anything-complete nil t)
+    (anything-lisp-complete-symbol-set-timer 150))
+  (require 'anything-show-completion nil t)
+  (when (require 'auto-install nil t)
+    (require 'anything-auto-install nil t))
+  (when (require 'descbinds-anything nil t)
+    (descbinds-anything-install)))
+
+;;color-moccurの設定
+(when (require 'color-moccur nil t)
+  (define-key global-map (kbd "M-o") 'occur-by-moccur)
+  (setq moccur-split-word t)
+  (add-to-list 'dmoccur-exclusion-mask "\\.DS-Store")
+  (add-to-list 'dmoccur-exclusion-mask "^#.+#$")
+  (when (and (executable-find "cmigemo")
+ 	     (require 'migemo nil t))
+    (setq moccur-use-migemo t)))
+ 
+;;moccur-editの設定
+(require 'moccur-edit nil t)
+
+;;redo設定
+(require 'redo+ nil t)
+
+;;auto-complete設定
+(load "fuzzy")
+(require 'auto-complete-config)
+(ac-config-default)
+(setq ac-use-fuzzy t)
+
+;;eldocの設定
+(defun elisp-mode-hooks ()
+  "lisp-mode-hooks"
+  (when (require 'eldoc nil t)
+    (setq eldoc-idle-delay 0.2)
+    (setq elisp-echo-area-use-multiline-p t)
+    (turn-on-eldoc-mode)))
+
+(add-hook 'emacs-lisp-mode-hook 'elisp-mode-hooks)
+
+;;c-eldocの設定
+(load "c-eldoc")
+(add-hook 'c-mode-hook
+          (lambda ()
+            (set (make-local-variable 'eldoc-idle-delay) 0.2)
+            (c-turn-on-eldoc-mode)
+            ))
+
+;;gudの設定
+(require 'gud)
+
+(setq gdb-many-windows t)
+(setq gdb-use-separate-io-buffer t)
+(add-hook
+ 'gdb-mode-hook
+ '(lambda ()
+    (gud-tooltip-mode t)
+    (gud-def gud-break-main "break main" nil "Set breakpoint at main.")
+ ))
+(setq gud-tooltip-echo-area nil)
+
+;;multi-termの設定
+
+;;change-bufferを使う
+(load "change-buffer")
+
+;;cua-modeの設定
+(cua-mode t)
+(setq cua-enable-cua-keys nil)
+
+;;arduino-modeの設定
+(load "arduino-mode")
+
+;;flycheckの設定
+(load "flycheck-pos-tip")
+(add-hook 'after-init-hook #'global-flycheck-mode)
+(eval-after-load 'flycheck
+  '(custom-set-variables
+   '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
+
+;;;;;;;;;;;;;;;;;;;;;キーバインド;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;グローバルキーマップ
+(define-key global-map (kbd "C-m") 'newline-and-indent)
+(define-key global-map (kbd "C-c l") 'toggle-truncate-lines)
+(define-key global-map (kbd "C-t") 'other-window)
+(define-key global-map (kbd "C-\\") 'redo)
+(define-key global-map (kbd "C-i") 'flycheck-next-error)
+(define-key global-map (kbd "C-u") 'flycheck-previous-error)
+(global-set-key (kbd "C-,") (lambda () (interactive) (my-operate-buffer nil)))
+(global-set-key (kbd "C-.") (lambda () (interactive) (my-operate-buffer t)))
+
+
+;gudモードキーマップ
+(define-key gud-minor-mode-map (kbd "<f1>") 'gud-print)
+(define-key gud-minor-mode-map (kbd "<S-f1>") 'gud-watch)
+(define-key gud-minor-mode-map (kbd "<f2>") 'gud-refresh)
+(define-key gud-minor-mode-map (kbd "<f5>") 'gud-cont)
+(define-key gud-minor-mode-map (kbd "<S-f5>") 'gud-kill)
+(define-key gud-minor-mode-map (kbd "<f6>") 'gud-until)
+(define-key gud-minor-mode-map (kbd "<f9>") 'gdb-set-clear-breakpoint)
+(define-key gud-minor-mode-map (kbd "<S-f9>") 'gud-break-main)
+(define-key gud-minor-mode-map (kbd "<f10>") 'gud-next)
+(define-key gud-minor-mode-map (kbd "<f11>") 'gud-step)
+(define-key gud-minor-mode-map (kbd "<C-f10>") 'gud-until)
+(define-key gud-minor-mode-map (kbd "<C-f11>") 'gud-finish)
+(define-key gud-minor-mode-map (kbd "<S-f11>") 'gud-finish)
+

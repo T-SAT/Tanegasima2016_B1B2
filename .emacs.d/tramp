@@ -1,0 +1,6 @@
+;; -*- emacs-lisp -*- <15/10/31 23:05:36 /home/kei/.emacs.d/tramp>
+;; Tramp connection history.  Don't change this file.
+;; You can delete it, forcing Tramp to reapply the checks.
+
+((["su" "root" "kei-virtual-machine" nil nil]
+  nil))
