@@ -2,7 +2,11 @@
 
 int main(void)
 {
-  char *str = "goodbay";
+  char *str = "good bay";
+
+  str [7] = 'y';
+  str [6] = 'e';
+
 
   printf("%s\n", str);
 
