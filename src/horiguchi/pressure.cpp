@@ -1,4 +1,5 @@
 #include <SPI.h>
+#include "pressure.h"
 #include <math.h>
 
 const int LPS331AP_CS = SS;
@@ -43,4 +44,3 @@ byte LPS331AP_read(byte reg)
   return ret;
 }
 
-void 
