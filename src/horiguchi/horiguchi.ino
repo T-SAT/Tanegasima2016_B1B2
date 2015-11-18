@@ -1,28 +1,12 @@
 #include <SPI.h>
 #include "pressure.h"
+#include "sonic.h"
 
-void setup() {
-  digitalWrite(SS, HIGH);
-  pinMode(SS, OUTPUT);
-  
-  SPI.begin();
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
 
+void setup() { 
   Serial.begin(9600);
-  while (!Serial) {}
-
-  Serial.println(LPS331AP_read(LPS331AP_WHOAMI), HEX); // should show BB
-
-  LPS331AP_write(LPS331AP_CTRL1, B10010000);
-                             //   |||||||+ SPI Mode selection
-                             //   ||||||+- DELTA_EN
-                             //   |||||+-- BDU: block data update
-                             //   ||||+--- DIFF_EN: interrupt circuit enable
-                             //   |+++---- ODR2, ODR1, ODR0 (1Hz)
-                             //   +------- PD: 0: power down, 1: active
-}
-
+  LPS331AP_init();
+} 
 void loop() {
   long P;
   short T;
@@ -37,10 +21,10 @@ void loop() {
 
   p = P;
   p = p/4096.0;
-  
+
   t = T;
   t = 42.5 + t/480.0;
-  
+
   Serial.print(P);    // pressure (reading)
   Serial.print(" ");
   Serial.print(T);    // temperature (reading)
@@ -51,3 +35,18 @@ void loop() {
 
   delay(1000);
 }
+
+/*
+void setup(){
+ Serial.begin(9600);
+ sonic_init();
+ }
+ void loop(){
+ float dis_sonic;
+ dis_sonic = measure_sonic();
+ Serial.print(dis_sonic);
+ Serial.println(" m");
+ delay(500);
+ }
+ */
+
