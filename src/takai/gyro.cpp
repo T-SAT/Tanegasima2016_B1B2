@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include "gyro.h"
 
-const int L3GD20_CS = 10;
+const int L3GD20_CS = SS;
 //const int SS = 10;      // 必ず 10 番を出力にすること
 //const int MOSI = 11;
 //const int MISO = 12;

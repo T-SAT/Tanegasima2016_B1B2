@@ -2,7 +2,7 @@
 #include "accel.h"
 
 //Assign the Chip Select signal to pin 10.
-int CS=10;
+int CS;
 char POWER_CTL = 0x2D;	//Power Control Register
 char DATA_FORMAT = 0x31;
 char DATAX0 = 0x32;	//X-Axis Data 0
@@ -16,7 +16,7 @@ void measure_accel(float *x, float *y, float *z)
 {
   char values[10];
   int tmpx, tmpy, tmpz;
-  
+
   //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
   //The results of the read operation will get stored to the values[] buffer.
   readRegister(DATAX0, 6, values);
@@ -28,11 +28,11 @@ void measure_accel(float *x, float *y, float *z)
   tmpy = ((int)values[3]<<8)|(int)values[2];
   //The Z value is stored in values[4] and values[5].
   tmpz = ((int)values[5]<<8)|(int)values[4];
-  
+
   *x = (float)tmpx;
   *y = (float)tmpy;
   *z = (float)tmpz;
-  
+
 }
 
 void init_accel(int cs)
@@ -44,6 +44,9 @@ void init_accel(int cs)
   pinMode(cs, OUTPUT);
   //Before communication starts, the Chip Select pin needs to be set high.
   digitalWrite(cs, HIGH);
+
+  pinMode(SS,OUTPUT);
+  digitalWrite(SS,HIGH);
 
   //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
   writeRegister(DATA_FORMAT, 0x01);
@@ -85,6 +88,7 @@ void readRegister(char registerAddress, int numBytes, char * values){
   //Set the Chips Select pin high to end the SPI packet.
   digitalWrite(CS, HIGH);
 }
+
 
 
 
