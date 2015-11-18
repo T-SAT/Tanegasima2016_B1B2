@@ -9,12 +9,11 @@
 
 /*
 *measure_infrared
-*setumei:
-*tyuyuryokuti:型、値の範囲、単位
-*nyuuryokuti:型、引数名、値の範囲、単位
-
+*説明:
+*出力値:型、値の範囲、単位
+*入力値:型、引数名、値の範囲、単位
 */
-float measure_infrared(void)
+float measure_infrared(void);
 
 
 #endif
