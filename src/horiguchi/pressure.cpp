@@ -45,8 +45,8 @@ byte LPS331AP_read(byte reg)
 }
 
 void LPS331AP_init(void){
- digitalWrite(SS, HIGH);
  pinMode(SS, OUTPUT);
+ digitalWrite(SS, HIGH);
  
  SPI.begin();
  SPI.setBitOrder(MSBFIRST);

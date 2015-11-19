@@ -2,7 +2,7 @@
 #include "accel.h"
 
 //Assign the Chip Select signal to pin 10.
-int CS=10;
+int CS;
 char POWER_CTL = 0x2D;	//Power Control Register
 char DATA_FORMAT = 0x31;
 char DATAX0 = 0x32;	//X-Axis Data 0
@@ -16,7 +16,7 @@ void measure_accel(float *x, float *y, float *z)
 {
   char values[10];
   int tmpx, tmpy, tmpz;
-  
+
   //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
   //The results of the read operation will get stored to the values[] buffer.
   readRegister(DATAX0, 6, values);
@@ -28,13 +28,35 @@ void measure_accel(float *x, float *y, float *z)
   tmpy = ((int)values[3]<<8)|(int)values[2];
   //The Z value is stored in values[4] and values[5].
   tmpz = ((int)values[5]<<8)|(int)values[4];
-  
+
   *x = (float)tmpx;
   *y = (float)tmpy;
   *z = (float)tmpz;
-  
+
 }
 
+<<<<<<< HEAD
+=======
+void init_accel(int cs)
+{
+  //Initiate an SPI communication instance.
+  SPI.begin();
+  //Configure the SPI connection for the ADXL345.
+  SPI.setDataMode(SPI_MODE3);
+  pinMode(cs, OUTPUT);
+  //Before communication starts, the Chip Select pin needs to be set high.
+  digitalWrite(cs, HIGH);
+
+  pinMode(SS,OUTPUT);
+  digitalWrite(SS,HIGH);
+
+  //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
+  writeRegister(DATA_FORMAT, 0x01);
+  //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
+  writeRegister(POWER_CTL, 0x08);  //Measurement mode  
+  CS = cs;
+}
+>>>>>>> d9fc48eb8f4a52ea6032025ca7dfde15dbe6e155
 
 //電圧を０にするらしい
 void writeRegister(char registerAddress, char value){
@@ -89,5 +111,6 @@ void init_accel(int cs)
   writeRegister(POWER_CTL, 0x08);  //Measurement mode  
   CS = cs;
 }
+
 
 

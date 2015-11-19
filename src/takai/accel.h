@@ -18,7 +18,10 @@ extern char DATAY1;	//Y-Axis Data 1
 extern char DATAZ0;	//Z-Axis Data 0
 extern char DATAZ1;	//Z-Axis Data 1
 
+/////////////ユーザ用関数///////////////////
 void measure_accel(float *x, float *y, float *z);
+////////////////////////////////////////////
+
 void init_accel(int cs);
 void writeRegister(char registerAddress, char value);
 void readRegister(char registerAddress, int numBytes, char * values);
