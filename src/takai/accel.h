@@ -19,11 +19,23 @@ extern char DATAZ0;	//Z-Axis Data 0
 extern char DATAZ1;	//Z-Axis Data 1
 
 /////////////ユーザ用関数///////////////////
+/*init_accel
+ *説明:加速度センサの設定
+ *出力値;なし
+ *入力値:ピン番号
+ */
+void init_accel(int cs2);
+
+/*measure_accel
+ *説明:加速度センサの値の取得
+ *出力値:なし
+ *入力値:float [m/s^2]
+ */
 void measure_accel(float *x, float *y, float *z);
 ////////////////////////////////////////////
 
-void init_accel(int CS2);
 void writeRegister(char registerAddress, char value);
 void readRegister(char registerAddress, int numBytes, char * values);
 
 #endif
+

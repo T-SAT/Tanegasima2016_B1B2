@@ -35,28 +35,23 @@ void measure_accel(float *x, float *y, float *z)
 
 }
 
-<<<<<<< HEAD
-void init_accel(int CS2)
-=======
-<<<<<<< HEAD
-=======
-void init_accel(int cs)
->>>>>>> cba927b2659eb96786c7c16de76edb474ef26112
+void init_accel(int cs2)
+
 {
   //Initiate an SPI communication instance.
 
   //Configure the SPI connection for the ADXL345.
   SPI.setDataMode(SPI_MODE3);
-  pinMode(CS2, OUTPUT);
+  pinMode(cs2, OUTPUT);
   //Before communication starts, the Chip Select pin needs to be set high.
-  digitalWrite(CS2, HIGH);
-
+  digitalWrite(cs2, HIGH);
+  CS2 = cs2;
   //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
   writeRegister(DATA_FORMAT, 0x01);
   //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
   writeRegister(POWER_CTL, 0x08);  //Measurement mode  
 }
->>>>>>> d9fc48eb8f4a52ea6032025ca7dfde15dbe6e155
+
 
 //電圧を０にするらしい
 void writeRegister(char registerAddress, char value){
@@ -93,24 +88,5 @@ void readRegister(char registerAddress, int numBytes, char * values){
   //Set the Chips Select pin high to end the SPI packet.
   digitalWrite(CS2, HIGH);
 }
-
-
-void init_accel(int cs)
-{
-  //Initiate an SPI communication instance.
-  SPI.begin();
-  //Configure the SPI connection for the ADXL345.
-  SPI.setDataMode(SPI_MODE3);
-  pinMode(cs, OUTPUT);
-  //Before communication starts, the Chip Select pin needs to be set high.
-  digitalWrite(cs, HIGH);
-
-  //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
-  writeRegister(DATA_FORMAT, 0x01);
-  //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
-  writeRegister(POWER_CTL, 0x08);  //Measurement mode  
-  CS = cs;
-}
-
 
 
