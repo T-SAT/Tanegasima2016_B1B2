@@ -5,29 +5,26 @@
 
 void setup() {
   Serial.begin(9600);
+  SPI.begin();
+  pinMode(SS, OUTPUT);
+  digitalWrite(SS, HIGH);
+
+  init_gyro(8);
   init_accel(3);
 }
 
 void loop() {
   float x, y, z;
-  short x_raw, y_raw, z_raw;
+  //short x_raw, y_raw, z_raw;
 
-  //get_gyro(&x_raw, &y_raw, &z_raw);
-  //measure_gyro(&x, &y, &z);
-  /*
-  Serial.print(x_raw);    // X axis (reading)
-   Serial.print("\t");
-   Serial.print(y_raw);    // Y axis (reading)
-   Serial.print("\t");
-   Serial.print(z_raw);    // Z axis (reading)
-   Serial.print("\t");
-   Serial.print(x);    // X axis (deg/sec)
-   Serial.print("\t");
-   Serial.print(y);    // Y axis (deg/sec)
-   Serial.print("\t");
-   Serial.println(z);  // Z axis (deg/sec)
-   */
-   
+  measure_gyro(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.println(z);  // Z axis (deg/sec)
+  Serial.print("\t");
+  
   measure_accel(&x, &y, &z);
   Serial.print(x);    // X axis (deg/sec)
   Serial.print("\t");
@@ -38,6 +35,9 @@ void loop() {
 
   delay(10);
 }
+
+
+
 
 
 

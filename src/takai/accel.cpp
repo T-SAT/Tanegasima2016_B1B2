@@ -2,7 +2,7 @@
 #include "accel.h"
 
 //Assign the Chip Select signal to pin 10.
-int CS;
+int CS2;
 char POWER_CTL = 0x2D;	//Power Control Register
 char DATA_FORMAT = 0x31;
 char DATAX0 = 0x32;	//X-Axis Data 0
@@ -35,35 +35,31 @@ void measure_accel(float *x, float *y, float *z)
 
 }
 
-void init_accel(int cs)
+void init_accel(int CS2)
 {
   //Initiate an SPI communication instance.
-  SPI.begin();
+
   //Configure the SPI connection for the ADXL345.
   SPI.setDataMode(SPI_MODE3);
-  pinMode(cs, OUTPUT);
+  pinMode(CS2, OUTPUT);
   //Before communication starts, the Chip Select pin needs to be set high.
-  digitalWrite(cs, HIGH);
-
-  pinMode(SS,OUTPUT);
-  digitalWrite(SS,HIGH);
+  digitalWrite(CS2, HIGH);
 
   //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
   writeRegister(DATA_FORMAT, 0x01);
   //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
   writeRegister(POWER_CTL, 0x08);  //Measurement mode  
-  CS = cs;
 }
 
 void writeRegister(char registerAddress, char value){
   //Set Chip Select pin low to signal the beginning of an SPI packet.
-  digitalWrite(CS, LOW);
+  digitalWrite(CS2, LOW);
   //Transfer the register address over SPI.
   SPI.transfer(registerAddress);
   //Transfer the desired register value over SPI.
   SPI.transfer(value);
   //Set the Chip Select pin high to signal the end of an SPI packet.
-  digitalWrite(CS, HIGH);
+  digitalWrite(CS2, HIGH);
 }
 
 //This function will read a certain number of registers starting from a specified address and store their values in a buffer.
@@ -78,7 +74,7 @@ void readRegister(char registerAddress, int numBytes, char * values){
   if(numBytes > 1)address = address | 0x40;
 
   //Set the Chip select pin low to start an SPI packet.
-  digitalWrite(CS, LOW);
+  digitalWrite(CS2, LOW);
   //Transfer the starting register address that needs to be read.
   SPI.transfer(address);
   //Continue to read registers until we've read the number specified, storing the results to the input buffer.
@@ -86,7 +82,7 @@ void readRegister(char registerAddress, int numBytes, char * values){
     values[i] = SPI.transfer(0x00);
   }
   //Set the Chips Select pin high to end the SPI packet.
-  digitalWrite(CS, HIGH);
+  digitalWrite(CS2, HIGH);
 }
 
 
