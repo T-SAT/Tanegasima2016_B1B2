@@ -10,9 +10,12 @@
 /*
 *measure_infrared
 *説明:
-*出力値:型、値の範囲、単位
-*入力値:型、引数名、値の範囲、単位
+*出力値:型、値の範囲２０～１５０、単位　ｍ
+*入力値:型、引数名、値の範囲、単位　
 */
+extern float Vcc;
+extern float dist;
+
 float measure_infrared(void);
 
 
