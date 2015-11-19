@@ -1,6 +1,12 @@
 #include"infrared.h"
 
+ //////write your code///////
+float Vcc = 5.0;
+float dist;
+
 float measure_infrared(void)
 {
-  //////write your code///////
+  dist = Vcc*analogRead(A1)/1023;
+  dist = 26.549 * pow(dist,-1.2091)*0.01;
+  return(dist);
 }
