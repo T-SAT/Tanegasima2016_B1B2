@@ -13,6 +13,7 @@
 *出力値:型、値の範囲、単位
 *入力値:型、引数名、値の範囲、単位
 */
+extern  int CS1;
 extern const int L3GD20_CS;
 //const int SS = 10;      // 必ず 10 番を出力にすること
 //const int MOSI = 11;
@@ -37,7 +38,7 @@ extern const byte L3GD20_MS;
 
 void get_gyro(short *x, short *y, short *z);
 void measure_gyro(float *x, float *y, float *z);
-void init_gyro(int SS);
+void init_gyro(int CS1);
 void L3GD20_write(byte reg, byte val);
 byte L3GD20_read(byte reg);
 

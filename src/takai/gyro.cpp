@@ -1,7 +1,8 @@
 #include <SPI.h>
 #include "gyro.h"
 
-const int L3GD20_CS = SS;
+int CS1;
+const int L3GD20_CS = CS1;
 //const int SS = 10;      // 必ず 10 番を出力にすること
 //const int MOSI = 11;
 //const int MISO = 12;
@@ -26,7 +27,6 @@ const byte L3GD20_MS = 0x40;
 
 
 //////write your code///////
-
 void L3GD20_write(byte reg, byte val)
 {
   digitalWrite(L3GD20_CS, LOW);
@@ -50,7 +50,7 @@ byte L3GD20_read(byte reg)
 void get_gyro(short *x, short *y, short *z)
 {
   short X, Y, Z;
-  
+
   X = L3GD20_read(L3GD20_X_H);
   *x = X = (X << 8) | L3GD20_read(L3GD20_X_L);
   Y = L3GD20_read(L3GD20_Y_H);
@@ -72,16 +72,15 @@ void measure_gyro(float *x, float *y, float *z)
 
 }
 
-void init_gyro(int SS)
+void init_gyro(int CS1)
 {
-  digitalWrite(SS, HIGH);
-  pinMode(SS, OUTPUT);
-
-  SPI.begin();
+  pinMode(CS1,OUTPUT);
+  digitalWrite(CS1,HIGH);
+ 
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
 
-  Serial.begin(9600);
+ 
   while (!Serial) {
   }
 
@@ -95,6 +94,7 @@ void init_gyro(int SS)
   //   ||++---- BW1-BW0: cut off 12.5[Hz]
   //   ++------ DR1-DR0: ODR 95[HZ]
 }
+
 
 
 
