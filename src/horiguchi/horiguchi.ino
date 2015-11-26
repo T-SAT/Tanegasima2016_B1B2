@@ -1,8 +1,9 @@
 #include <SPI.h>
+#include <SD.h>
 #include "pressure.h"
 #include "sonic.h"
 #include "skLPSxxSPI.h"
-
+#include "sd.h"
 
 skLPSxxx LPS(LPS25H, 2);
 
@@ -12,6 +13,8 @@ void setup(){
   Serial.begin(9600);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
+  SD.begin(SD_CSPIN);
+  
   LPS.PressureInit() ;
   LPS.PressureRead();
   pressure_origin = LPS.getPressure();
@@ -22,7 +25,13 @@ void loop(){
   float h;
   float t;
   float p;
+  float pi;
 
+  pi = 3.14;
+  
+  saveLog("test.csv", &pi, 1);
+   
+/*
   LPS.PressureRead();
   t = LPS.getTempreture();
   p = LPS.getPressure();
@@ -31,6 +40,7 @@ void loop(){
   Serial.print("t = "); Serial.print(t);
   Serial.print("\tp = "); Serial.print(p);
   Serial.print("\th = "); Serial.println(h);
+*/
 }
 
 /*
