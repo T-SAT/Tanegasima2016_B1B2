@@ -36,7 +36,7 @@ extern const byte L3GD20_Z_H;
 extern const byte L3GD20_RW;
 extern const byte L3GD20_MS;
 
-///////////ユーザ関数////////////////
+///////////ユーザ用関数////////////////
 /*init_gyro
  *説明:ジャイロセンサの設定
  *出力値:なし
@@ -48,7 +48,6 @@ void init_gyro(int CS1);
  *説明:ジャイロセンサを用いて角速度の取得するプログラム
  *出力値:なし      []
  *入力値:float   [rad/s]
- *
  */
 void measure_gyro(float *x, float *y, float *z);
 
