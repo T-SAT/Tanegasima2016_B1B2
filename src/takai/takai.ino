@@ -29,7 +29,7 @@ void setup() {
   Serial.begin(9600);
   SPI.begin();
   pinMode(SS,OUTPUT);
-  digitalWrite(SS,HIGH);
+
 
   init_gyro(8);
   init_accel(3);
