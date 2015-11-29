@@ -1,15 +1,18 @@
 #include <SPI.h>
 #include <SD.h>
+#include <Servo.h>
 #include "pressure.h"
 #include "sonic.h"
 #include "skLPSxxSPI.h"
 #include "sd.h"
+#include "servo.h"
 
 skLPSxxx LPS(LPS25H, 2);
 
 float pressure_origin;
 
 void setup(){
+  /*
   Serial.begin(9600);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
@@ -18,6 +21,7 @@ void setup(){
   LPS.PressureInit() ;
   LPS.PressureRead();
   pressure_origin = LPS.getPressure();
+  */
   
 }
 
@@ -26,12 +30,16 @@ void loop(){
   float t;
   float p;
   float pi;
+  
+ move_servo();
+
+/*
 
   pi = 3.14;
   
   saveLog("test.csv", &pi, 1);
+
    
-/*
   LPS.PressureRead();
   t = LPS.getTempreture();
   p = LPS.getPressure();
