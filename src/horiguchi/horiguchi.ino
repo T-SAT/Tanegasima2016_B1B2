@@ -28,22 +28,29 @@ void setup() {
 }
 
 void loop() {
-/*
+  move_servo();
   ///////////////圧力センサ//////////////////
   float h;
   float t;
   float p;
+  float pressure[3];
 
   LPS.PressureRead();
   t = LPS.getTempreture();
   p = LPS.getPressure();
   h = LPS.AltitudeCalc(pressure_origin, p);
 
+  pressure[0] = t;
+  pressure[1] = p;
+  pressure[2] = h;
+
+  saveLog("hori.csv", pressure, 3);
+
   Serial.print("t = "); Serial.print(t);
   Serial.print("\tp = "); Serial.print(p);
-  Serial.print("\th = "); Serial.print(h);
-
-*/
+  Serial.print("\th = "); Serial.println(h);
+}
+/*
   ///////////超音波センサ//////////////
 
   float dis_sonic;
@@ -52,8 +59,8 @@ void loop() {
   Serial.print(dis_sonic);
   Serial.println(" m");
   delay(500);
-}
-
+  }
+*/
 /*
   void setup() {
   Serial.begin(9600);

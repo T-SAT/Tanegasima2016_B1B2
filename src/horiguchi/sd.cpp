@@ -13,6 +13,7 @@ void saveLog(char *filename, float *data, int num)
       datafile.print(data[i]);
       datafile.print(",");    
     }
+    datafile.print(millis());
     datafile.println();
     datafile.close();
   }
