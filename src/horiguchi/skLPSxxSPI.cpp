@@ -27,7 +27,7 @@
 *******************************************************************************/
 skLPSxxx::skLPSxxx(int id, int cspin)
 {
-  Who_Am_I_ID = id ;
+  Who_Am_I_ID =  id;
   CS_Pin      = cspin ;
   Press = 0;
   Temp = 0;

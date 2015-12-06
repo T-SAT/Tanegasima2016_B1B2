@@ -4,7 +4,7 @@
 #include "skLPSxxSPI.h"
 
 
-skLPSxxx LPS(LPS331AP, 2);
+skLPSxxx LPS(LPS25H, SS);
 
 float pressure_origin;
 
