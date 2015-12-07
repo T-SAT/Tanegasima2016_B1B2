@@ -1,8 +1,7 @@
 #include <SPI.h>
 #include "gyro.h"
 
-int CS1;
-const int L3GD20_CS = CS1;
+int L3GD20_CS;
 //const int SS = 10;      // 必ず 10 番を出力にすること
 //const int MOSI = 11;
 //const int MISO = 12;
@@ -76,11 +75,13 @@ void init_gyro(int CS1)
 {
   pinMode(CS1,OUTPUT);
   digitalWrite(CS1,HIGH);
- 
+
+  L3GD20_CS = CS1;
+
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
 
- 
+
   while (!Serial) {
   }
 
@@ -94,6 +95,8 @@ void init_gyro(int CS1)
   //   ||++---- BW1-BW0: cut off 12.5[Hz]
   //   ++------ DR1-DR0: ODR 95[HZ]
 }
+
+
 
 
 

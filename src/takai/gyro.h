@@ -9,12 +9,12 @@
 
 /*
 *measure_gyro
-*説明:
-*出力値:型、値の範囲、単位
-*入力値:型、引数名、値の範囲、単位
-*/
-extern  int CS1;
-extern const int L3GD20_CS;
+ *説明:
+ *出力値:型、値の範囲、単位
+ *入力値:型、引数名、値の範囲、単位
+ */
+
+extern int L3GD20_CS;
 //const int SS = 10;      // 必ず 10 番を出力にすること
 //const int MOSI = 11;
 //const int MISO = 12;
@@ -36,10 +36,26 @@ extern const byte L3GD20_Z_H;
 extern const byte L3GD20_RW;
 extern const byte L3GD20_MS;
 
-void get_gyro(short *x, short *y, short *z);
-void measure_gyro(float *x, float *y, float *z);
+///////////ユーザ用関数////////////////
+/*init_gyro
+ *説明:ジャイロセンサの設定
+ *出力値:なし
+ *入力値:ピン番号
+ */
 void init_gyro(int CS1);
+
+/*measure_gyro
+ *説明:ジャイロセンサを用いて角速度の取得するプログラム
+ *出力値:なし      []
+ *入力値:float   [rad/s]
+ */
+void measure_gyro(float *x, float *y, float *z);
+
+/////////////////////////////////////
+
+void get_gyro(short *x, short *y, short *z); //ジャイロの生データ取得
 void L3GD20_write(byte reg, byte val);
 byte L3GD20_read(byte reg);
 
 #endif
+
