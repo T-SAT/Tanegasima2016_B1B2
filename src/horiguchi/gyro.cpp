@@ -66,7 +66,7 @@ void measure_gyro(float *x, float *y, float *z)
 
   *x = (float)(x_raw - offsetxGyro) * 0.00875; // +-250dps
   //x *= 0.0175;// +-500dps
-  //x *= 0.07;  // +-2000dps
+  //x *= 07;  // +-2000dps
   *y = (float)(y_raw - offsetyGyro) * 0.00875; // +-250dps
   *z = (float)(z_raw - offsetzGyro) * 0.00875; // +-250dps
 

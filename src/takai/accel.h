@@ -26,7 +26,7 @@ extern char DATAY1;	//Y-Axis Data 1
 extern char DATAZ0;	//Z-Axis Data 0
 extern char DATAZ1;	//Z-Axis Data 1
 
-extern 
+
 /////////////ユーザ用関数///////////////////
 /*init_accel
  *説明:加速度センサの設定
