@@ -11,7 +11,12 @@
 //////CS pressure 10 accel 7 sd 3 gyro 9///////
 
 
+<<<<<<< HEAD
+
+skLPSxxx LPS(LPS25H, SS);
+=======
 skLPSxxx LPS(LPS25H, 2);  //圧力センサの型番の設定
+>>>>>>> c20859c890707a590068970930fdcfd26d90867c
 
 float pressure_origin;
 

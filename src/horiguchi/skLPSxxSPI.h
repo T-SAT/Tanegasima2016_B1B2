@@ -46,7 +46,7 @@ class skLPSxxx
     int CS_Pin ;
     float Press ;               // 圧力の値を保存する変数
     float Temp ;                // 温度の値を保存する変数
-
+    
   public:
     skLPSxxx(int id, int cspin) ;
     int   PressureInit() ;
