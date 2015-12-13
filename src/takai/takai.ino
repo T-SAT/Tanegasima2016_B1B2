@@ -101,6 +101,8 @@ float current_gyro;
 //微小時間
 unsigned long d_time = 0;
 unsigned long starttime = millis();
+//軌跡と進行方向との角度
+float angle_trace;
 ///////////////////////////////////////////
 ////////////////制御定数////////////////////////////
 //神の比例値ｐ
@@ -197,15 +199,17 @@ void setup() {
   digitalWrite(SS, HIGH);
 
   init_gyro(8);
+   
 }
 
 void loop() {
     unsigned long int distance_m;  //機体の現在地からゴールまでの距離
     unsigned long int distance_o;  //原点から現在地までの距離
-    long int distancetrace;        //現在地から軌跡までの距離
+    long int distance_trace;        //現在地から軌跡までの距離
     float current_angle;           //機体から見たゴールの座標(-180～180)[°]
     float control_value;
     float x,y,z;
+    int count = 1;
     
     gelay(1000); //GPSデータを受信し終わるまで待機
     currentFlat_deg = gps.location.lat();  //受信した座標の緯度を現在地の座標の緯度として設定
@@ -223,7 +227,7 @@ void loop() {
      while(1);
    }
 
-   //北の方位から見たときの現在の機体の角度を求める(0
+   //北の方位から見たときの現在の機体の角度を求める(0～360)
    current_angle = TinyGPSPlus::courseTo(originFlat_deg, originFlon_deg, currentFlat_deg, currentFlon_deg);
 
    current_angle = goal_angle - current_angle;  //機体からみたときのゴール地点への角度を計算する
@@ -231,26 +235,36 @@ void loop() {
    //ゴールから機体までの角度を範囲(180～-180)の範囲に変換
    if(current_angle > 180) current_angle = current_angle - 360;
    else if(current_angle < -180) current_angle = current_angle + 360;
+   
+   //最初の軌跡と進行方向との角度
+   if(count == 1)
+   {
+     angle_trace = current_angle;
+     count = count + 1;
+   }
 
    distance_o = (unsigned long)TinyGPSPlus::distanceBetween(originFlat_deg,originFlon_deg,currentFlat_deg, currentFlon_deg);
    //原点座標から現在の座標までの距離（上)
-   distancetrace =distance_o * sin(current_angle);//現在の座標から軌跡までの距離
+   distance_trace =distance_o * sin(current_angle);//現在の座標から軌跡までの距離
    
     //角速度
     measure_gyro(&x, &y, &z);
     current_gyro = z;//反時計回りって(ー)の値でたっけ？
     current_gyro = G_gyro - current_gyro;//これいるか？
     
-    //最適角速度計算
-    G_gyro = current_gyro + d_time * (-kd_gain * distancetrace -kq_gain * current_angle -kw_gain * current_gyro);
-    
     //微小時間計算
     d_time = (millis() - starttime) / 1000 - d_time;
     
+    //最適角速度計算
+    G_gyro = z + d_time * ( - kd_gain * (-distance_trace) - kq_gain * (-angle_trace) - kw_gain * (-current_gyro));
+    
+   
+    //軌跡と進行方向との角度
+    angle_trace = angle_trace - z * d_time ;
     
     Serial.print("current_gyro = "); 
     Serial.println(current_gyro);
-    control_value = p_gain * current_gyro;
+    control_value = p_gain * G_gyro;
  
     if (control_value < 0)
     control_value = -constrain(abs(control_value), min_str, max_str);
