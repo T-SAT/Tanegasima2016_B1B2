@@ -13,9 +13,14 @@
 #define ST_DOWN   4
 #define ST_LAND   5
 
+#define UP_ALTITUDE 25
+#define DOWN_ALTITUDE 25
+#define TOP_ALTITUDE 50
+#define LAND_ALTITUDE 1
+
 extern int cur_st;
 
-int check_st(flout dtitude);
+int check_st(float dtitude);
 void release_para(void);
 
 #endif
