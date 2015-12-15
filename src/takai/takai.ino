@@ -100,7 +100,7 @@ float G_gyro=0;
 float current_gyro;
 //微小時間
 unsigned long d_time = 0;
-unsigned long starttime = millis();
+unsigned long starttime = millis();//時間はここからでもできるのか？
 //軌跡と進行方向との角度
 float angle_trace;
 ///////////////////////////////////////////
@@ -198,7 +198,7 @@ void setup() {
   pinMode(SS, OUTPUT);
   digitalWrite(SS, HIGH);
 
-  init_gyro(8);
+  init_gyro(8);//pin番号上に書けそう
    
 }
 
@@ -208,8 +208,8 @@ void loop() {
     long int distance_trace;        //現在地から軌跡までの距離
     float current_angle;           //機体から見たゴールの座標(-180～180)[°]
     float control_value;
-    float x,y,z;
-    int count = 1;
+    float x,y,z;                   //角速度、多分ｚしか使わないだろう・・
+    int count = 1;                 //原点とゴールを結ぶ直線とローバーの進行方向との角度をとるのに使う（もっといい案があるかも）
     
     gelay(1000); //GPSデータを受信し終わるまで待機
     currentFlat_deg = gps.location.lat();  //受信した座標の緯度を現在地の座標の緯度として設定
@@ -227,20 +227,20 @@ void loop() {
      while(1);
    }
 
-   //北の方位から見たときの現在の機体の角度を求める(0～360)
+   //北の方位から見たときの現在の機体の角度を求める(-360～360)
    current_angle = TinyGPSPlus::courseTo(originFlat_deg, originFlon_deg, currentFlat_deg, currentFlon_deg);
 
    current_angle = goal_angle - current_angle;  //機体からみたときのゴール地点への角度を計算する
 
-   //ゴールから機体までの角度を範囲(180～-180)の範囲に変換
+   //ゴールから機体までの角度を範囲(-180～180)の範囲に変換
    if(current_angle > 180) current_angle = current_angle - 360;
    else if(current_angle < -180) current_angle = current_angle + 360;
    
-   //最初の軌跡と進行方向との角度
-   if(count == 1)
+   //最初の軌跡(原点とゴールを結ぶ線)と進行方向との角度
+   if(count == 1)   //最初の一回だけはcurrent_angleと同じなので
    {
      angle_trace = current_angle;
-     count = count + 1;
+     count = count + 1;   //二回目以降は違うので華麗にスルー(void setupに書くと多くなりそうだったのでこっちに)
    }
 
    distance_o = (unsigned long)TinyGPSPlus::distanceBetween(originFlat_deg,originFlon_deg,currentFlat_deg, currentFlon_deg);
@@ -250,7 +250,7 @@ void loop() {
     //角速度
     measure_gyro(&x, &y, &z);
     current_gyro = z;//反時計回りって(ー)の値でたっけ？
-    current_gyro = G_gyro - current_gyro;//これいるか？
+    current_gyro = G_gyro - current_gyro;//
     
     //微小時間計算
     d_time = (millis() - starttime) / 1000 - d_time;
@@ -260,10 +260,16 @@ void loop() {
     
    
     //軌跡と進行方向との角度
-    angle_trace = angle_trace - z * d_time ;
+    angle_trace = angle_trace - z * d_time ;//ジャイロセンサに依存(途中でなんか補正できれば...)
     
-    Serial.print("current_gyro = "); 
-    Serial.println(current_gyro);
+    Serial.print("gyro_z = ");//ローバーの角速度
+    Serial.println(z);
+    Serial.print("distance_trace = ");//ローバーと直線の距離
+    Serial.println(distance_trace);
+    Serial.print("angle_trace = ");//進行方向と直線との角度
+    Serial.println(angle_trace);
+    Serial.print("G_gyro = "); //最適角速度
+    Serial.println(G_gyro);
     control_value = p_gain * G_gyro;
  
     if (control_value < 0)
