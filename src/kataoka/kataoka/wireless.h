@@ -7,9 +7,9 @@
 #include "WProgram.h"
 #endif
 
-#define SS_RX 1 //ソフトウェアシリアルrxピン
-#define SS_TX 2 //ソフトウェアシリアルtxピン
+#define SS_RX 10 //ソフトウェアシリアルrxピン
+#define SS_TX 12 //ソフトウェアシリアルtxピン
 
 void transferData(float data[], int num);
-
+void wireless_init();
 #endif

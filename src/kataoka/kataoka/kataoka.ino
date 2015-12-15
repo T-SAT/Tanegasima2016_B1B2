@@ -7,26 +7,26 @@
 #include "wireless.h"
 
 #define CSPin 2
+/*
+  skLPSxxx LPS(LPS25H, CSPin);
 
-skLPSxxx LPS(LPS25H, CSPin);
+  float pressure_origin;
 
-float pressure_origin;
-
-void setup() {
+  void setup() {
   // put your setup code here, to run once:
   LPS.PressureRead();
   pressure_origin = LPS.getPressure();
 
-}
+  }
 
-void loop() {
+  void loop() {
   float altitude;
   float pressure_cur;
   int state = ST_START;
   float transData[2];
 
-  
-  
+
+
   while (state != ST_LAND) {
     LPS.PressureRead();
     pressure_cur = LPS.getPressure();
@@ -36,9 +36,22 @@ void loop() {
     transferData(transData, 2);
     state = check_st(altitude);
   }
-  
+
   release_para();
-  
+
   // put your main code here, to run repeatedly:
 
+  }
+*/
+void setup() {
+  Serial.begin(9600);
+  wireless_init();
+  sonic_init();
 }
+void loop() {
+  float x[1];
+  x[0] = measure_sonic();
+
+  transferData(x, 1);
+}
+

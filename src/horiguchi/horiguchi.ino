@@ -10,13 +10,7 @@
 
 //////CS pressure 10 accel 7 sd 3 gyro 9///////
 
-
-<<<<<<< HEAD
-
-skLPSxxx LPS(LPS25H, SS);
-=======
-skLPSxxx LPS(LPS25H, 2);  //圧力センサの型番の設定
->>>>>>> c20859c890707a590068970930fdcfd26d90867c
+skLPSxxx LPS(LPS25H, A1);  //圧力センサの型番の設定
 
 float pressure_origin;
 
@@ -44,28 +38,28 @@ void loop()
   /*
     //////////サーボ//////////
     move_servo();
-    ///////////////圧力センサ//////////////////
-    float h;
-    float t;
-    float p;
-    float pressure[3];
+  */
+  ///////////////圧力センサ//////////////////
+  float h;
+  float t;
+  float p;
+  float pressure[3];
 
-    LPS.PressureRead();
-    t = LPS.getTempreture();
-    p = LPS.getPressure();
-    h = LPS.AltitudeCalc(pressure_origin, p);
+  LPS.PressureRead();
+  t = LPS.getTempreture();
+  p = LPS.getPressure();
+  h = LPS.AltitudeCalc(pressure_origin, p);
 
-    pressure[0] = t;
-    pressure[1] = p;
-    pressure[2] = h;
+  pressure[0] = t;
+  pressure[1] = p;
+  pressure[2] = h;
 
-    saveLog("hori.csv", pressure, 3);
+////  saveLog("hori.csv", pressure, 3);
 
-    Serial.print("t = "); Serial.print(t);
-    Serial.print("\tp = "); Serial.print(p);
-    Serial.print("\th = "); Serial.println(h);
-    }
-
+  Serial.print("t = "); Serial.print(t);
+  Serial.print("\tp = "); Serial.print(p);
+  Serial.print("\th = "); Serial.println(h);
+/*
     ///////////超音波センサ//////////////
 
     float dis_sonic;
@@ -74,7 +68,7 @@ void loop()
     Serial.print(dis_sonic);
     Serial.println(" m");
     delay(500);
-  */
+
   float x, y, z;
   float gyro[3];
 
@@ -90,8 +84,8 @@ void loop()
   Serial.print(y);    // Y axis (deg/sec)
   Serial.print("\t");
   Serial.println(z);  // Z axis (deg/sec)
-
-  delay(10);
+*/
+delay(10);
 
 }
 
