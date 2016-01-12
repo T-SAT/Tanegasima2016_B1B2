@@ -7,7 +7,7 @@
 #include "WProgram.h"
 #endif
 
-#define SD_CSPIN 3
+#define SD_CSPIN 6
 
 /* saveLog
  * 説明:名前がfilenameのファイルにデータを一つ保存する
