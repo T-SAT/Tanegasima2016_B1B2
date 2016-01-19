@@ -7,10 +7,10 @@
 #include "sd.h"
 #include "servo.h"
 #include "gyro.h"
-
+#include "accel.h"
 //////CS pressure 10 accel 7 sd 3 gyro 9///////
 
-skLPSxxx LPS(LPS25H, 3);  //圧力センサの型番の設定
+skLPSxxx LPS(LPS25H, A2);  //圧力センサの型番の設定
 
 float pressure_origin;
 float pressure_offsetsum;
@@ -40,12 +40,14 @@ float sum_buffer(float *buffer, int num)
 void setup() {
   Serial.begin(9600);
   pinMode(10, OUTPUT);
+
+  
   /*
     /////////////SD設定部///////////////
     SD.begin(SD_CSPIN);
     //////////////超音波センサ設定部///////////////////
     sonic_init();
-  */
+  
   ////////////圧力センサ設定部////////////////
   LPS.PressureInit() ;
   LPS.PressureRead();
@@ -64,6 +66,10 @@ void setup() {
   //delay(5000);
     ////////////ジャイロセンサ設定部////////////
     //  init_gyro(9);
+  init_gyro(A1);
+   */
+   init_accel(7);
+
 
 }
 
@@ -76,7 +82,7 @@ void loop()
 
   // float falltest[4];
   //float pressure[3];
-
+/*
   ///////////////圧力センサ//////////////////
   float h;
   float t;
@@ -112,15 +118,15 @@ void loop()
     ave = sum / (float)num;
 
     Serial.print(",ave=,"); Serial.println(ave, 6);
-  */
+  
   static float y[2] = {0};
   y[1] = 0.9 * y[0] + 0.1 * h;
 
   /* フィルタ出力を使った処理 */
 
-  Serial.print(",y=,"); Serial.println(y[1]);
+  //Serial.print(",y=,"); Serial.println(y[1]);
 
-  y[0] = y[1];
+  //y[0] = y[1];
 
 
   /*
@@ -153,7 +159,29 @@ void loop()
     Serial.print("\t");
     Serial.println(z);  // Z axis (deg/sec)
   */
-  delay(40);
+  //delay(40);
+
+    float x, y, z;
+  //short x_raw, y_raw, z_raw;
+/*
+  measure_gyro(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(z);  // Z axis (deg/sec)
+  Serial.print("\t\t");
+*/
+  measure_accel(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.println(z);  // Z axis (deg/sec)
+
+
+  delay(10);
+
 
 }
 

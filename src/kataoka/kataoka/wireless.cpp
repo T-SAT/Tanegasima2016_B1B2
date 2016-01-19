@@ -14,7 +14,7 @@ void transferData(float data[], int num)
   
   for(i = 0; i < num; i++) {
       ss.print(data[i]);
-      ss.print(",");    
+      ss.print(",");
   }
   
   ss.print(millis());

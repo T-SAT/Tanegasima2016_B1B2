@@ -6,7 +6,7 @@
 #include "sonic.h"
 #include "wireless.h"
 
-#define CSPin 2
+#define CSPin 9
 /*
   skLPSxxx LPS(LPS25H, CSPin);
 
@@ -45,13 +45,32 @@
 */
 void setup() {
   Serial.begin(9600);
+  SPI.begin();
+
   wireless_init();
-  sonic_init();
+  // sonic_init();
+  init_accel(7);
+
 }
 void loop() {
-  float x[1];
-  x[0] = measure_sonic();
+  float x, y, z;
 
-  transferData(x, 1);
+  float s[3];
+
+  measure_accel(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.println(z);  // Z axis (deg/sec)
+
+  s[0] = x;
+  s[1] = y;
+  s[2] = z;
+
+  transferData(s, 3);
+
+  delay(10);
+
 }
 
