@@ -8,82 +8,64 @@
 #include "servo.h"
 #include "gyro.h"
 #include "accel.h"
-//////CS pressure 10 accel 7 sd 3 gyro 9///////
 
-skLPSxxx LPS(LPS25H, A2);  //圧力センサの型番の設定
+#define MODE_AGL    //加速度、ジャイロ、気圧
+//#define MODE_ACCEL  //加速度
+//#define MODE_GYRO   //ジャイロ
+//#define MODE_LPS    //気圧
+//#define MODE_SONIC  //超音波
+//#define MODE_SERVO  //サーボ
 
+#define accel_cs 6
+#define gyro_cs  7
+#define LPS_cs   8
+
+
+skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
-float pressure_offsetsum;
-float pressure_offset;
 
-void push(float *buffer, int num, float data)
-{
-  int i;
-
-  for (i = 0; i < num - 1; i++)
-    buffer[i + 1] = buffer[i];
-
-  buffer[0] = data;
-}
-
-float sum_buffer(float *buffer, int num)
-{
-  int i;
-  float tmp = 0.0;
-
-  for (i = 0; i < num; i++)
-    tmp += buffer[i];
-
-  return (tmp);
-}
-
+#ifdef MODE_AGL
 void setup() {
   Serial.begin(9600);
   pinMode(10, OUTPUT);
+  SPI.begin();
 
+  init_accel(accel_cs);
+  init_gyro(gyro_cs);
   
-  /*
-    /////////////SD設定部///////////////
-    SD.begin(SD_CSPIN);
-    //////////////超音波センサ設定部///////////////////
-    sonic_init();
-  
-  ////////////圧力センサ設定部////////////////
   LPS.PressureInit() ;
   LPS.PressureRead();
   int j;
   static long f = millis();
+  static float setRC_LPS[2] = {0};
+
   while ((millis() - f) < 10000) {
-    pressure_offsetsum = LPS.getPressure();
-    static float x[2] = {0};
-    x[1] = 0.99 * x[0] + 0.01 * pressure_offsetsum;
-    pressure_offsetsum = x[1];
-    x[0] = x[1];
+    pressure_origin = LPS.getPressure();
+    setRC_LPS[1] = 0.99 * setRC_LPS[0] + 0.01 * pressure_origin;
+    pressure_origin = setRC_LPS[1];
+    setRC_LPS[0] = setRC_LPS[1];
   }
-  pressure_offset = pressure_offsetsum;
-  pressure_origin = pressure_offset;
-  //Serial.print("pressure_offset="); Serial.print(pressure_offset);
-  //delay(5000);
-    ////////////ジャイロセンサ設定部////////////
-    //  init_gyro(9);
-  init_gyro(A1);
-   */
-   init_accel(7);
-
-
 }
+void loop() {
+  float x, y, z;
 
-void loop()
-{
-  /*
-    //////////サーボ//////////
-    move_servo();
-  */
+  measure_accel(&x, &y, &z);
+  Serial.print(x);    // X accel (m/sec^2)
+  Serial.print("\t");
+  Serial.print(y);    // Y accel (m/sec^2)
+  Serial.print("\t");
+  Serial.print(z);  // Z accel (m/sec^2)
+  Serial.print("\t");
 
-  // float falltest[4];
-  //float pressure[3];
-/*
-  ///////////////圧力センサ//////////////////
+  measure_gyro(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(z);  // Z axis (deg/sec)
+  Serial.print("\t");
+
+  delay(10);
   float h;
   float t;
   float p;
@@ -93,85 +75,33 @@ void loop()
   p = LPS.getPressure();
   h = LPS.AltitudeCalc(pressure_origin, p);
 
-  //falltest[0] = t;
-  //falltest[1] = p;
-  //falltest[2] = h;
-
-  //pressure[0] = t;
-  //pressure[1] = p;
-  //pressure[2] = h;
-
-
-  // saveLog("a.csv", pressure, 3);
-
   Serial.print("t = ,"); Serial.print(t);
   Serial.print(",p =,"); Serial.print(p);
   Serial.print(",h =,"); Serial.print(h);
-  /*
-    const int num = 100;
 
-    static float b[num];
-    float sum, ave;
+  static float RC_LPS[2] = {0};
+  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
 
-    push(b, num, h);
-    sum = sum_buffer(b, num);
-    ave = sum / (float)num;
+  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
 
-    Serial.print(",ave=,"); Serial.println(ave, 6);
-  
-  static float y[2] = {0};
-  y[1] = 0.9 * y[0] + 0.1 * h;
+  RC_LPS[0] = RC_LPS[1];
 
-  /* フィルタ出力を使った処理 */
+  delay(40);
+}
+#endif
 
-  //Serial.print(",y=,"); Serial.println(y[1]);
+////////////加速度センサ//////////////////
+#ifdef MODE_ACCEL
+void setup() {
+  Serial.begin(9600);
+  pinMode(10, OUTPUT);
+  SPI.begin();
 
-  //y[0] = y[1];
+  init_accel(accel_cs);
+}
+void loop() {
+  float x, y, z;
 
-
-  /*
-    ///////////超音波センサ//////////////
-
-    float dis_sonic;
-    dis_sonic = measure_sonic();
-
-    falltest[3] = dis_sonic;
-
-    saveLog("mura6.csv", falltest, 4);
-
-    Serial.print("\t");
-    Serial.print(dis_sonic);
-    Serial.println(" m");
-
-    float x, y, z;
-    float gyro[3];
-
-    gyro[0] = x;
-    gyro[1] = y;
-    gyro[2] = z;
-
-    saveLog("hori7.csv", gyro, 3);
-
-    measure_gyro(&x, &y, &z);
-    Serial.print(x);    // X axis (deg/sec)
-    Serial.print("\t");
-    Serial.print(y);    // Y axis (deg/sec)
-    Serial.print("\t");
-    Serial.println(z);  // Z axis (deg/sec)
-  */
-  //delay(40);
-
-    float x, y, z;
-  //short x_raw, y_raw, z_raw;
-/*
-  measure_gyro(&x, &y, &z);
-  Serial.print(x);    // X axis (deg/sec)
-  Serial.print("\t");
-  Serial.print(y);    // Y axis (deg/sec)
-  Serial.print("\t");
-  Serial.print(z);  // Z axis (deg/sec)
-  Serial.print("\t\t");
-*/
   measure_accel(&x, &y, &z);
   Serial.print(x);    // X axis (deg/sec)
   Serial.print("\t");
@@ -179,13 +109,117 @@ void loop()
   Serial.print("\t");
   Serial.println(z);  // Z axis (deg/sec)
 
+  delay(10);
+}
+#endif
+////////////////ジャイロセンサ//////////////////
+#ifdef MODE_GYRO
+void setup() {
+  Serial.begin(9600);
+  pinMode(10, OUTPUT);
+  SPI.begin();
+
+  init_gyro(gyro_cs);
+}
+void loop() {
+  float x, y, z;
+  //short x_raw, y_raw, z_raw;
+
+  measure_gyro(&x, &y, &z);
+  Serial.print(x);    // X axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(y);    // Y axis (deg/sec)
+  Serial.print("\t");
+  Serial.print(z);  // Z axis (deg/sec)
+  Serial.print("\t\t");
 
   delay(10);
-
-
 }
+#endif
+//////////////圧力センサ/////////////////////
+#ifdef MODE_LPS
+void setup() {
+  Serial.begin(9600);
+  pinMode(10, OUTPUT);
+  SPI.begin();
 
+  LPS.PressureInit() ;
+  LPS.PressureRead();
+  int j;
+  static long f = millis();
+  static float setRC_LPS[2] = {0};
+  
+  while ((millis() - f) < 10000) {
+    pressure_origin = LPS.getPressure();
+    setRC_LPS[1] = 0.99 * setRC_LPS[0] + 0.01 * pressure_origin;
+    pressure_oirign = setRC_LPS[1];
+    setRC_LPS[0] = setRC_LPS[1];
+  }
+}
+void loop() {
+  float h;
+  float t;
+  float p;
+
+  LPS.PressureRead();
+  t = LPS.getTempreture();
+  p = LPS.getPressure();
+  h = LPS.AltitudeCalc(pressure_origin, p);
+
+  Serial.print("t = ,"); Serial.print(t);
+  Serial.print(",p =,"); Serial.print(p);
+  Serial.print(",h =,"); Serial.print(h);
+
+  static float RC_LPS[2] = {0};
+  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+
+  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
+
+  RC_LPS[0] = RC_LPS[1];
+
+  delay(40);
+}
+#endif
+/////////////////超音波センサ//////////////////
+#ifdef MODE_SONIC
+void setup() {
+  Serial.begin(9600);
+  sonic_init();
+}
+void loop() {
+  float dis_sonic;
+  dis_sonic = measure_sonic();
+
+  Serial.print("\t");
+  Serial.print(dis_sonic);
+  Serial.println(" [m]");
+}
+#endif
+////////////////サーボ//////////////////////
+#ifdef MODE_SERVO
+void setup() {
+  Serial.begin(9600);
+}
+void loop() {
+  move_servo();
+}
+#endif
+//////SDサンプル///////////
 /*
+  void setup(){
+  SD.begin(SD_CSPIN);
+  }
+  void loop(){
+  float x,y,z
+  sd[3];
+  sd[0]=x ;
+  sd[1]=y ;
+  sd[2]=z ;
+
+   saveLog(sd.csv,sd,3);
+  }
+
+  /*
   void setup() {
   Serial.begin(9600);
   LPS331AP_init();
