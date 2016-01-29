@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
 #include "pressure.h"
 #include "sonic.h"
 #include "skLPSxxSPI.h"
@@ -8,21 +9,129 @@
 #include "servo.h"
 #include "gyro.h"
 #include "accel.h"
+#include "wireless.h"
 
-#define MODE_AGL    //加速度、ジャイロ、気圧
+#define MODE_FALL
+//#define MODE_AGL    //加速度、ジャイロ、気圧
 //#define MODE_ACCEL  //加速度
 //#define MODE_GYRO   //ジャイロ
 //#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
 //#define MODE_SERVO  //サーボ
 
-#define accel_cs 6
-#define gyro_cs  7
-#define LPS_cs   8
+#define accel_cs 7
+#define gyro_cs  9
+#define LPS_cs   10
 
-
-skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
+skLPSxxx LPS(LPS331AP, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
+
+void ReceiveStr(char *str) {
+  int i;
+  char ch;
+
+  for (i = 0; ch != '!';) {
+    if (wirelessAvailable()) {
+      ch = receiveData();
+      str[i] = ch;
+      i++;
+    }
+  }
+  str[i - 1] = '\0';
+}
+
+#ifdef MODE_FALL
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(10, OUTPUT);
+  SPI.begin();
+
+  wireless_init();
+  init_accel(accel_cs);
+  init_gyro(gyro_cs);
+
+  LPS.PressureInit() ;
+  LPS.PressureRead();
+  
+  int j;
+  static long f = millis();
+  static float setRC_LPS[2] = {0};
+
+  while ((millis() - f) < 10000) {
+    pressure_origin = LPS.getPressure();
+    setRC_LPS[1] = 0.99 * setRC_LPS[0] + 0.01 * pressure_origin;
+    pressure_origin = setRC_LPS[1];
+    setRC_LPS[0] = setRC_LPS[1];
+  }
+
+  char str[100];
+  
+  TransferStr("Ready...");
+  while (strcmp(str, "START") != 0) {
+    ReceiveStr(str);
+  }
+
+  TransferStr("Start!");
+}
+
+void loop()
+{
+  float data[9];
+  float x, y, z;
+  
+  measure_accel(&x, &y, &z);
+  data[0] = x;
+  data[1] = y;
+  data[2] = z;
+  Serial.print(x);
+  Serial.print("\t");
+  Serial.print(y);
+  Serial.print("\t");
+  Serial.print(z);
+  Serial.print("\t");
+  
+  measure_gyro(&x, &y, &z);
+  data[3] = x;
+  data[4] = y;
+  data[5] = z;
+  Serial.print(x);
+  Serial.print("\t");
+  Serial.print(y);
+  Serial.print("\t");
+  Serial.print(z);
+  Serial.print("\t");
+  delay(10);
+  float h;
+  float t;
+  float p;
+
+  LPS.PressureRead();
+  t = LPS.getTempreture();
+  p = LPS.getPressure();
+  h = LPS.AltitudeCalc(pressure_origin, p);
+  Serial.print(t);
+  Serial.print("\t");
+  Serial.print(p);
+  Serial.print("\t");
+  Serial.print(h);
+  Serial.print("\t");
+  data[6] = t;
+  data[7] = p;
+  data[8] = h;
+  
+  static float RC_LPS[2] = {0};
+  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+
+  data[9] = RC_LPS[1];
+  
+  RC_LPS[0] = RC_LPS[1];
+  Serial.println(RC_LPS[1]);
+  
+  delay(40);
+  transferData(data, 9); 
+}
+#endif
 
 #ifdef MODE_AGL
 void setup() {
@@ -32,7 +141,7 @@ void setup() {
 
   init_accel(accel_cs);
   init_gyro(gyro_cs);
-  
+
   LPS.PressureInit() ;
   LPS.PressureRead();
   int j;
@@ -46,6 +155,7 @@ void setup() {
     setRC_LPS[0] = setRC_LPS[1];
   }
 }
+
 void loop() {
   float x, y, z;
 
@@ -148,7 +258,7 @@ void setup() {
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
-  
+
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
     setRC_LPS[1] = 0.99 * setRC_LPS[0] + 0.01 * pressure_origin;
