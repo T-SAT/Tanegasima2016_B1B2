@@ -9,19 +9,19 @@
 #include "gyro.h"
 #include "accel.h"
 
-#define MODE_AGL    //加速度、ジャイロ、気圧
+//#define MODE_AGL    //加速度、ジャイロ、気圧
 //#define MODE_ACCEL  //加速度
 //#define MODE_GYRO   //ジャイロ
-//#define MODE_LPS    //気圧
+#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
 //#define MODE_SERVO  //サーボ
 
-#define accel_cs 6
-#define gyro_cs  7
-#define LPS_cs   8
+#define accel_cs 7
+#define gyro_cs  9
+#define LPS_cs   10
 
 
-skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
+skLPSxxx LPS(LPS331AP, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
 
 #ifdef MODE_AGL
@@ -32,12 +32,14 @@ void setup() {
 
   init_accel(accel_cs);
   init_gyro(gyro_cs);
-  
+
   LPS.PressureInit() ;
   LPS.PressureRead();
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
+
+  setRC_LPS[0] = LPS.getPressure();
 
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
@@ -79,12 +81,12 @@ void loop() {
   Serial.print(",p =,"); Serial.print(p);
   Serial.print(",h =,"); Serial.print(h);
 
-  static float RC_LPS[2] = {0};
-  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+  static float RC_h[2] = {0};
+  RC_h[1] = 0.9 * RC_h[0] + 0.1 * h;
 
-  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
+  Serial.print(",RC_h=,"); Serial.println(RC_h[1]);
 
-  RC_LPS[0] = RC_LPS[1];
+  RC_h[0] = RC_h[1];
 
   delay(40);
 }
@@ -130,8 +132,7 @@ void loop() {
   Serial.print("\t");
   Serial.print(y);    // Y axis (deg/sec)
   Serial.print("\t");
-  Serial.print(z);  // Z axis (deg/sec)
-  Serial.print("\t\t");
+  Serial.println(z);  // Z axis (deg/sec)
 
   delay(10);
 }
@@ -148,11 +149,13 @@ void setup() {
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
-  
+
+  //setRC_LPS[0] = LPS.getPressure();
+
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
     setRC_LPS[1] = 0.99 * setRC_LPS[0] + 0.01 * pressure_origin;
-    pressure_oirign = setRC_LPS[1];
+    pressure_origin = setRC_LPS[1];
     setRC_LPS[0] = setRC_LPS[1];
   }
 }
@@ -167,15 +170,15 @@ void loop() {
   h = LPS.AltitudeCalc(pressure_origin, p);
 
   Serial.print("t = ,"); Serial.print(t);
-  Serial.print(",p =,"); Serial.print(p);
-  Serial.print(",h =,"); Serial.print(h);
+  Serial.print(",\tp =,"); Serial.print(p);
+  Serial.print(",\th =,"); Serial.print(h);
 
-  static float RC_LPS[2] = {0};
-  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+  static float RC_h[2] = {0};
+  RC_h[1] = 0.9 * RC_h[0] + 0.1 * h;
 
-  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
+  Serial.print(",\tRC_h=,"); Serial.println(RC_h[1]);
 
-  RC_LPS[0] = RC_LPS[1];
+  RC_h[0] = RC_h[1];
 
   delay(40);
 }
