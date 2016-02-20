@@ -92,15 +92,19 @@ void init_gyro(int CS1)
   while (!Serial) {
   }
 
+  Serial.print("L3GD20 ID = ");
   Serial.println(L3GD20_read(L3GD20_WHOAMI), HEX); // should show D4
 
-  L3GD20_write(L3GD20_CTRL1, B00001111);
+  L3GD20_write(L3GD20_CTRL1, B11001111);
   //   |||||||+ X axis enable
   //   ||||||+- Y axis enable
   //   |||||+-- Z axis enable
   //   ||||+--- PD: 0: power down, 1: active
-  //   ||++---- BW1-BW0: cut off 12.5[Hz]
-  //   ++------ DR1-DR0: ODR 95[HZ]
+  //   ||++---- BW1-BW0: cut off 760[Hz]
+  //   ++------ DR1-DR0: ODR 30[HZ]
+
+  L3GD20_write(L3GD20_CTRL2, B00000100);
+  L3GD20_write(L3GD20_CTRL5, B00010000);
 
   for (i = 0; i < OFFSET_NUM; i++)
   {

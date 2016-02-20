@@ -7,8 +7,8 @@
 #include "WProgram.h"
 #endif
 
-#define TRIGPIN   8
-#define ECHOPIN   9
+#define TRIGPIN   3
+#define ECHOPIN   2
 #define CTM       10
 
 /*sonic_init
