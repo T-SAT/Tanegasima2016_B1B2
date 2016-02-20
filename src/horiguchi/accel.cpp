@@ -3,7 +3,7 @@
 
 //Assign the Chip Select signal to pin 10.
 int CS2;
-int offsetx, offsety, offsetz;
+static float offsetx, offsety, offsetz;
 char POWER_CTL = 0x2D;	//Power Control Register
 char DATA_FORMAT = 0x31;
 char DATAX0 = 0x32;	//X-Axis Data 0
@@ -43,17 +43,17 @@ void get_accel(int *x, int *y, int *z)
 void init_accel(int cs2)
 {
   int i, tmpx, tmpy, tmpz;
-  int avrx, avry, avrz;
+  float avrx, avry, avrz;
 
   avrx = avry = avrz = 0;
   
   //Initiate an SPI communication instance.
 
   //Configure the SPI connection for the ADXL345.
-  SPI.setDataMode(SPI_MODE3);
+  digitalWrite(cs2, HIGH);
+
   pinMode(cs2, OUTPUT);
   //Before communication starts, the Chip Select pin needs to be set high.
-  digitalWrite(cs2, HIGH);
   CS2 = cs2;
   //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
   writeRegister(DATA_FORMAT, 0x01);

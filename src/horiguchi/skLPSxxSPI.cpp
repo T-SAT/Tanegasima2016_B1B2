@@ -31,14 +31,9 @@ skLPSxxx::skLPSxxx(int id, int cspin)
   CS_Pin      = cspin ;
   Press = 0;
   Temp = 0;
-
-/*
-  pinMode(cspin, OUTPUT);
   digitalWrite(cspin, HIGH);
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV4);
-  SPI.setDataMode(SPI_MODE3);
-*/
+
+  pinMode(cspin, OUTPUT);
 }
 /*******************************************************************************
    ans = PressureInit()

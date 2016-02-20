@@ -11,13 +11,15 @@
 //#define MODE_FALL
 //#define MODE_AGL    //加速度、ジャイロ、気圧
 //#define MODE_ACCEL    //加速度+SD
-//#define MODE_GYRO   //ジャイロ
-#define MODE_LPS    //気圧
+#define MODE_GYRO   //ジャイロ
+//#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
 
 #define accel_cs A3
 #define gyro_cs  A1
 #define LPS_cs   A2
+
+#define OFFSET_NUM 1000
 
 skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
@@ -48,53 +50,30 @@ float getDt(void)
 
   return ( time );
 }
-/*
-void sensor_init()
+
+void SPI_init()
 {
-  pinMode(CS1, OUTPUT);
-  digitalWrite(CS1, HIGH);
-  pinMode(LPS_cs, OUTPUT);
-  digitalWrite(LPS_cs, HIGH);
-  L3GD20_CS = CS1;
-
-  int i;
-  short tmpx, tmpy, tmpz;
-  float avrx, avry, avrz;
-
-  avrx = avry = avrz = 0;
-
+  digitalWrite(10, HIGH);
+  pinMode(10, OUTPUT);
+  SPI.begin();
   SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
-
-
-  
-  L3GD20_write(L3GD20_CTRL1, B00001111);
-  //   |||||||+ X axis enable
-  //   ||||||+- Y axis enable
-  //   |||||+-- Z axis enable
-  //   ||||+--- PD: 0: power down, 1: active
-  //   ||++---- BW1-BW0: cut off 12.5[Hz]
-  //   ++------ DR1-DR0: ODR 95[HZ]
-
-  for (i = 0; i < 1000; i++)
-  {
-    get_gyro(&tmpx, &tmpy, &tmpz);
-    avrx += tmpx;
-    avry += tmpy;
-    avrz += tmpz;
-  }
-  offsetxGyro = avrx / OFFSET_NUM;
-  offsetyGyro = avry / OFFSET_NUM;
-  offsetzGyro = avrz / OFFSET_NUM;
+  SPI.setDataMode(SPI_MODE3);
+  SPI.setClockDivider(SPI_CLOCK_DIV8); // 16MHz/8 = 2MHz; (max 10MHz)
 }
-*/
+
+void sensor_init(void)
+{
+  SPI_init();
+  init_gyro(gyro_cs);
+  LPS.PressureInit() ;
+  init_accel(accel_cs);
+}
+
 #ifdef MODE_FALL
 void setup()
 {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
-
+  sensor_init();
   wireless_init();
   init_accel(accel_cs);
   init_gyro(gyro_cs);
@@ -184,8 +163,7 @@ void loop()
 #ifdef MODE_AGL
 void setup() {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
+  sensor_init();
 
   init_accel(accel_cs);
   init_gyro(gyro_cs);
@@ -254,8 +232,7 @@ void loop() {
 #ifdef MODE_ACCEL
 void setup() {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
+  sensor_init();
 
   init_accel(accel_cs);
   SD.begin(SD_CSPIN);
@@ -284,8 +261,7 @@ void loop() {
 #ifdef MODE_GYRO
 void setup() {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
+  sensor_init();
 
   init_gyro(gyro_cs);
   wireless_init();
@@ -321,8 +297,7 @@ void loop() {
 #ifdef MODE_LPS
 void setup() {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
+  sensor_init();
 
   LPS.PressureInit() ;
   LPS.PressureRead();
