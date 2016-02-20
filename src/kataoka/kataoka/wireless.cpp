@@ -8,6 +8,11 @@ void wireless_init()
   
 }
 
+void TransferStr(char *str)
+{
+  ss.print(str);  
+}
+
 void transferData(float data[], int num)
 {
   int i;
@@ -20,3 +25,14 @@ void transferData(float data[], int num)
   ss.print(millis());
   ss.println();
 }
+
+int wirelessAvailable(void)
+{
+  return(ss.available());
+}
+
+char receiveData(void)
+{  
+  ss.read();  
+}
+

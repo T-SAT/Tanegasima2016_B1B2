@@ -46,14 +46,19 @@ void init_accel(int cs2)
   int avrx, avry, avrz;
 
   avrx = avry = avrz = 0;
-  
+
   //Initiate an SPI communication instance.
 
   //Configure the SPI connection for the ADXL345.
-  SPI.setDataMode(SPI_MODE3);
-  pinMode(cs2, OUTPUT);
+  //pinMode(SS, OUTPUT);
+  //pinMode(SS, HIGH);
+  //SPI.begin();
+  //SPI.setBitOrder(MSBFIRST);
+  //SPI.setClockDivider(SPI_CLOCK_DIV16); // 8MHz/8 = 1MHz; (max 10MHz)
+
   //Before communication starts, the Chip Select pin needs to be set high.
   digitalWrite(cs2, HIGH);
+  pinMode(cs2, OUTPUT);
   CS2 = cs2;
   //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
   writeRegister(DATA_FORMAT, 0x01);
@@ -63,17 +68,19 @@ void init_accel(int cs2)
     get_accel(&tmpx, &tmpy, &tmpz);
     avrx += tmpx;
     avry += tmpy;
-    avrz += tmpz;  
+    avrz += tmpz;
   }
   offsetx = avrx / OFFSET_NUM;
   offsety = avry / OFFSET_NUM;
-  offsetz = avrz / OFFSET_NUM; 
+  offsetz = avrz / OFFSET_NUM;
 }
 
 //電圧を０にするらしい
 void writeRegister(char registerAddress, char value) {
   //Set Chip Select pin low to signal the beginning of an SPI packet.
+  SPI.setDataMode(SPI_MODE3);
   digitalWrite(CS2, LOW);
+  delayMicroseconds(10);
   //Transfer the register address over SPI.
   SPI.transfer(registerAddress);
   //Transfer the desired register value over SPI.
@@ -94,8 +101,10 @@ void readRegister(char registerAddress, int numBytes, char * values) {
   //If we're doing a multi-byte read, bit 6 needs to be set as well.
   if (numBytes > 1)address = address | 0x40;
 
+  SPI.setDataMode(SPI_MODE3);
   //Set the Chip select pin low to start an SPI packet.
   digitalWrite(CS2, LOW);
+  delayMicroseconds(10);
   //Transfer the starting register address that needs to be read.
   SPI.transfer(address);
   //Continue to read registers until we've read the number specified, storing the results to the input buffer.

@@ -25,8 +25,6 @@
   int state = ST_START;
   float transData[2];
 
-
-
   while (state != ST_LAND) {
     LPS.PressureRead();
     pressure_cur = LPS.getPressure();
@@ -43,7 +41,24 @@
 
   }
 */
+void ReceiveStr(char *str){
+  int i;
+  char ch;
+  
+  for(i = 0; ch != '!';) {
+    if(wirelessAvailable()) {
+      ch = receiveData();
+      str[i] = ch;
+      i++;
+    }
+  }
+  str[i-1] = '\0';
+}
+
 void setup() {
+  char str[100];
+
+  memset(str, 0, sizeof(str));
   Serial.begin(9600);
   SPI.begin();
 
@@ -51,24 +66,34 @@ void setup() {
   // sonic_init();
   init_accel(7);
 
-}
-void loop() {
-  float x, y, z;
+  TransferStr("Ready...");
+  while(strcmp(str, "START") != 0) {
+     ReceiveStr(str);
+  }
 
+  TransferStr("Start!");
+}
+
+void loop() {
+  int i;
+  float x, y, z;
   float s[3];
+  char ch;
 
   measure_accel(&x, &y, &z);
+
+/*
   Serial.print(x);    // X axis (deg/sec)
   Serial.print("\t");
   Serial.print(y);    // Y axis (deg/sec)
   Serial.print("\t");
   Serial.println(z);  // Z axis (deg/sec)
-
+*/
   s[0] = x;
   s[1] = y;
   s[2] = z;
 
-  transferData(s, 3);
+  //transferData(s, 3);
 
   delay(10);
 
