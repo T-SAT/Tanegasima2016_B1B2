@@ -11,12 +11,10 @@
 #define MODE_4G (4.0 / 512.0)
 #define MODE_8G (8.0 / 512.0)
 #define MODE_16G (16.0 / 512.0)
-
-#define OFFSET_NUM 1000
+#define OFFSET_NUM 1000 
 
 //Assign the Chip Select signal to pin 10.
 extern int CS2;
-extern int offsetx, offsety, offsetz;
 extern char POWER_CTL;	//Power Control Register
 extern char DATA_FORMAT;
 extern char DATAX0;	//X-Axis Data 0

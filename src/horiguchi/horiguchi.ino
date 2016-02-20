@@ -1,32 +1,29 @@
 #include <SPI.h>
 #include <SD.h>
-#include <Servo.h>
 #include <SoftwareSerial.h>
-#include "pressure.h"
 #include "sonic.h"
 #include "skLPSxxSPI.h"
 #include "sd.h"
-#include "servo.h"
 #include "gyro.h"
 #include "accel.h"
 #include "wireless.h"
 #include "fall.h"
 
-//#define MODE_TEST
 //#define MODE_FALL
-
-#define MODE_AGL    //加速度、ジャイロ、気圧
-//#define MODE_ACCEL  //加速度
-//#define MODE_GYRO   //ジャイロ
+//#define MODE_AGL    //加速度、ジャイロ、気圧
+//#define MODE_ACCEL    //加速度+SD
+#define MODE_GYRO   //ジャイロ
 //#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
-//#define MODE_SERVO  //サーボ
 
 #define accel_cs A4
+#define accel_cs A3
 #define gyro_cs  A1
 #define LPS_cs   A2
 
-skLPSxxx LPS(LPS331AP, LPS_cs ); //圧力センサの型番の設定
+#define OFFSET_NUM 1000
+
+skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
 
 void ReceiveStr(char *str) {
@@ -56,47 +53,31 @@ float getDt(void)
   return ( time );
 }
 
-void SensorInit(void)
+float RC_LPS[2] = {0};
+
+void SPI_init()
 {
-  wireless_init();
-  pinMode(SS, OUTPUT);
-  pinMode(SS, HIGH);
+  digitalWrite(10, HIGH);
   pinMode(10, OUTPUT);
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
   SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE3);
+  SPI.setClockDivider(SPI_CLOCK_DIV8); // 16MHz/8 = 2MHz; (max 10MHz)
+}
+
+void sensor_init(void)
+{
+  SPI_init();
   init_gyro(gyro_cs);
-  LPS.PressureInit();
+  LPS.PressureInit() ;
   init_accel(accel_cs);
 }
 
-#ifdef MODE_TEST
-void setup()
-{
-  pinMode(PARAPIN, OUTPUT);
-  delay(5000);
-  release_para();
-}
-
-void loop()
-{
-
-}
-#endif
-
 #ifdef MODE_FALL
-float RC_LPS[2] = {0};
-
 void setup()
 {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
-
-  SensorInit();
-
-  LPS.PressureRead();
-
+  sensor_init();
   pinMode(PARAPIN, OUTPUT);
   int j;
   static long f = millis();
@@ -119,7 +100,7 @@ void setup()
 
   TransferStr("Start!");
   p = LPS.getPressure();
-  RC_LPS[0] = LPS.AltitudeCalc(pressure_origin, p);
+  RC_LPS[0] = 0
 }
 
 void loop()
@@ -131,8 +112,6 @@ void loop()
   float dt;
 
   dt = getDt();
-
-/*
   measure_accel(&x, &y, &z);
   data[0] = x;
   data[1] = y;
@@ -143,7 +122,7 @@ void loop()
   Serial.print("\t");
   Serial.print(z);
   Serial.print("\t");
-*/
+
   measure_gyro(&x, &y, &z);
   angle += z * dt;
   data[3] = x;
@@ -155,7 +134,7 @@ void loop()
   Serial.print("\t");
   Serial.print(z, 7);
   Serial.print("\t");
- 
+
   delay(10);
   float h;
   float t;
@@ -176,16 +155,11 @@ void loop()
   data[8] = h;
 
   RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+  RC_LPS[0] = RC_LPS[1];
 
   data[9] = RC_LPS[1];
   CurrentState = check_st(RC_LPS[1]);
-  /*  if(CurrentState == ST_LAND)
-      release_para();
-  */
-
   data[10] = (float)CurrentState;
-  RC_LPS[0] = RC_LPS[1];
-  Serial.println(RC_LPS[1]);
 
   delay(40);
   transferData(data, 11);
@@ -196,18 +170,24 @@ void loop()
 void setup() {
   delay(1000);
   Serial.begin(9600);
+  <<< <<< < HEAD
   pinMode(SS, OUTPUT);
   //SPI.begin();
+  == == == =
+    sensor_init();
+  >>> >>> > 9522b0b3e3f77640308c32ce9af666f703391e93
 
   pinMode(9, OUTPUT);
   pinMode(5, OUTPUT);
   Serial.println("hello world");
   SensorInit();
-  
+
   LPS.PressureRead();
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
+
+  setRC_LPS[0] = LPS.getPressure();
 
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
@@ -226,7 +206,7 @@ void loop() {
   //L3GD20_display();
   dt = getDt();
   measure_accel(&x, &y, &z);
-/**/
+  /**/
   Serial.print(x);    // X accel (m/sec^2)
   Serial.print("\t");
   Serial.print(y);    // Y accel (m/sec^2)
@@ -234,10 +214,10 @@ void loop() {
   Serial.print(z);  // Z accel (m/sec^2)
   Serial.print("\t");
   /**/
-  
+
   measure_gyro(&x, &y, &z);
   angle += z * dt;
- 
+
   Serial.print(x);    // X axis (deg/sec)
   Serial.print("\t");
   Serial.print(y);    // Y axis (deg/sec)
@@ -247,7 +227,7 @@ void loop() {
   Serial.print(angle);
   Serial.print("\t");
   delay(10);
- 
+
   float h;
   float t;
   float p;
@@ -261,12 +241,12 @@ void loop() {
   Serial.print(",p =,"); Serial.print(p);
   Serial.print(",h =,"); Serial.print(h);
 
-  static float RC_LPS[2] = {0};
-  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+  static float RC_h[2] = {0};
+  RC_h[1] = 0.9 * RC_h[0] + 0.1 * h;
 
-  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
+  Serial.print(",RC_h=,"); Serial.println(RC_h[1]);
 
-  RC_LPS[0] = RC_LPS[1];
+  RC_h[0] = RC_h[1];
 
   delay(40);
 }
@@ -280,6 +260,11 @@ void setup() {
   SPI.begin();
 
   SensorInit();
+  == == == =
+    sensor_init();
+
+  init_accel(accel_cs);
+  SD.begin(SD_CSPIN);
 }
 void loop() {
   float x, y, z;
@@ -290,7 +275,14 @@ void loop() {
   Serial.print(y);    // Y axis (deg/sec)
   Serial.print("\t");
   Serial.println(z);  // Z axis (deg/sec)
+  /*
+    float sd[3];
+    sd[0] = x ;
+    sd[1] = y ;
+    sd[2] = z ;
 
+    saveLog("21g.csv", sd, 3);
+  */
   delay(10);
 }
 #endif
@@ -308,8 +300,10 @@ void setup() {
   digitalWrite(A1, HIGH);
   digitalWrite(A2, HIGH);
   digitalWrite(A4, HIGH);
-  
+  sensor_init();
+
   init_gyro(gyro_cs);
+  wireless_init();
 }
 void loop() {
   float x, y, z;
@@ -321,7 +315,6 @@ void loop() {
   dt = getDt();
   measure_gyro(&x, &y, &z);
   angle += z * dt;
-  //L3GD20_display();
   Serial.print(x);    // X axis (deg/sec)
   Serial.print("\t");
   Serial.print(y);    // Y axis (deg/sec)
@@ -333,6 +326,16 @@ void loop() {
   Serial.print(dt);
   Serial.println("\t\t");
   delay(50);
+  Serial.println(angle);
+  float data[4];
+  data[0] = x;
+  data[1] = y;
+  data[2] = z;
+  data[3] = angle;
+
+  transferData(data, 4);
+
+  delay(10);
 }
 #endif
 
@@ -340,14 +343,16 @@ void loop() {
 #ifdef MODE_LPS
 void setup() {
   Serial.begin(9600);
-  pinMode(10, OUTPUT);
-  SPI.begin();
+  sensor_init();
 
   SensorInit();
   LPS.PressureRead();
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
+
+
+  //setRC_LPS[0] = LPS.getPressure();
 
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
@@ -368,15 +373,15 @@ void loop() {
   h = LPS.AltitudeCalc(pressure_origin, p);
 
   Serial.print("t = ,"); Serial.print(t);
-  Serial.print(",p =,"); Serial.print(p);
-  Serial.print(",h =,"); Serial.print(h);
+  Serial.print(",\tp =,"); Serial.print(p);
+  Serial.print(",\th =,"); Serial.print(h);
 
-  static float RC_LPS[2] = {0};
-  RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+  static float RC_h[2] = {0};
+  RC_h[1] = 0.9 * RC_h[0] + 0.1 * h;
 
-  Serial.print(",RC_LPS=,"); Serial.println(RC_LPS[1]);
+  Serial.print(",\tRC_h=,"); Serial.println(RC_h[1]);
 
-  RC_LPS[0] = RC_LPS[1];
+  RC_h[0] = RC_h[1];
 
   delay(40);
 }
@@ -391,20 +396,13 @@ void loop() {
   float dis_sonic;
   dis_sonic = measure_sonic();
 
-  Serial.print("\t");
   Serial.print(dis_sonic);
   Serial.println(" [m]");
+
+  delay(500);
 }
 #endif
-////////////////サーボ//////////////////////
-#ifdef MODE_SERVO
-void setup() {
-  Serial.begin(9600);
-}
-void loop() {
-  move_servo();
-}
-#endif
+
 //////SDサンプル///////////
 /*
   void setup(){
@@ -419,39 +417,4 @@ void loop() {
 
    saveLog(sd.csv,sd,3);
   }
-
-  /*
-  void setup() {
-  Serial.begin(9600);
-  LPS331AP_init();
-  }
-  void loop() {
-  long P;
-  short T;
-  float p, t;
-
-  P = LPS331AP_read(LPS331AP_P_H);
-  P = (P << 8) | LPS331AP_read(LPS331AP_P_L);
-  P = (P << 8) | LPS331AP_read(LPS331AP_P_LL);
-
-  T = LPS331AP_read(LPS331AP_T_H);
-  T = (T << 8) | LPS331AP_read(LPS331AP_T_L);
-
-  p = P;
-  p = p/4096.0;
-
-  t = T;
-  t = 42.5 + t/480.0;
-
-  Serial.print(P);    // pressure (reading)
-  Serial.print(" ");
-  Serial.print(T);    // temperature (reading)
-  Serial.print(" ");
-  Serial.print(p);  // pressure in [mbar]/[hPa]
-  Serial.print(" ");
-  Serial.println(t);  // temprerature in [`C]
-
-  delay(1000);
-  }
 */
-

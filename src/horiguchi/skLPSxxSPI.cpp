@@ -31,6 +31,7 @@ skLPSxxx::skLPSxxx(int id, int cspin)
   CS_Pin      = cspin ;
   Press = 0;
   Temp = 0;
+  digitalWrite(cspin, HIGH);
 
   //pinMode(SS, OUTPUT);
   //pinMode(SS, HIGH);
@@ -58,6 +59,8 @@ int skLPSxxx::PressureInit()
 
   // デバイスの識別ＩＤをチェックする処理
   PressureReceive(WHO_AM_I_ADRS, &data[0], 1) ;
+  Serial.print("LPSxxxxxID = ");
+  Serial.println(data[0]);
   // WHO_AM_Iの内容をチェック
   Serial.print("ID=");
   Serial.println(data[0], HEX);
