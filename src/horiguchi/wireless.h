@@ -7,8 +7,8 @@
 #include "WProgram.h"
 #endif
 
-#define SS_RX 0//ソフトウェアシリアルrxピン
-#define SS_TX 1 //ソフトウェアシリアルtxピン
+#define SS_RX 4//ソフトウェアシリアルrxピン
+#define SS_TX 2//ソフトウェアシリアルtxピン
 
 void transferData(float data[], int num);
 void TransferStr(char *str);

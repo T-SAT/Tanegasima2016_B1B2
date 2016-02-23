@@ -36,7 +36,6 @@ skLPSxxx::skLPSxxx(int id, int cspin)
   //pinMode(SS, OUTPUT);
   //pinMode(SS, HIGH);
   pinMode(cspin, OUTPUT);
-  digitalWrite(cspin, HIGH);
   //SPI.begin();
   //SPI.setBitOrder(MSBFIRST);
   //SPI.setClockDivider(SPI_CLOCK_DIV16);

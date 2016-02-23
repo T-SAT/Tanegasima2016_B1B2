@@ -1,7 +1,6 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SoftwareSerial.h>
-#include "sonic.h"
 #include "skLPSxxSPI.h"
 #include "sd.h"
 #include "gyro.h"
@@ -9,21 +8,20 @@
 #include "wireless.h"
 #include "fall.h"
 
-//#define MODE_FALL
+#define MODE_FALL
 //#define MODE_AGL    //加速度、ジャイロ、気圧
 //#define MODE_ACCEL    //加速度+SD
-#define MODE_GYRO   //ジャイロ
+//#define MODE_GYRO   //ジャイロ
 //#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
 
-#define accel_cs A4
-#define accel_cs A3
-#define gyro_cs  A1
-#define LPS_cs   A2
+#define accel_cs 7
+#define gyro_cs  10
+#define LPS_cs   10
 
 #define OFFSET_NUM 1000
 
-skLPSxxx LPS(LPS25H, LPS_cs ); //圧力センサの型番の設定
+skLPSxxx LPS(LPS331AP, LPS_cs ); //圧力センサの型番の設定
 float pressure_origin;
 
 void ReceiveStr(char *str) {
@@ -77,12 +75,16 @@ void sensor_init(void)
 void setup()
 {
   Serial.begin(9600);
-  sensor_init();
+  //sensor_init();
+  SPI_init();
+  LPS.PressureInit();
   pinMode(PARAPIN, OUTPUT);
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
   float p;
+  
+  //wireless_init();
   setRC_LPS[0] = LPS.getPressure();
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
@@ -92,7 +94,7 @@ void setup()
   }
 
   char str[100];
-
+  Serial.println("check");
   TransferStr("Ready...");
   while (strcmp(str, "START") != 0) {
     ReceiveStr(str);
@@ -100,7 +102,7 @@ void setup()
 
   TransferStr("Start!");
   p = LPS.getPressure();
-  RC_LPS[0] = 0
+  RC_LPS[0] = 0;
 }
 
 void loop()
@@ -326,16 +328,6 @@ void loop() {
   Serial.print(dt);
   Serial.println("\t\t");
   delay(50);
-  Serial.println(angle);
-  float data[4];
-  data[0] = x;
-  data[1] = y;
-  data[2] = z;
-  data[3] = angle;
-
-  transferData(data, 4);
-
-  delay(10);
 }
 #endif
 
