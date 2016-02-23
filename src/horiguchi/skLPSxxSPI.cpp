@@ -33,12 +33,12 @@ skLPSxxx::skLPSxxx(int id, int cspin)
   Temp = 0;
   digitalWrite(cspin, HIGH);
 
-  //pinMode(SS, OUTPUT);
-  //pinMode(SS, HIGH);
+  pinMode(SS, OUTPUT);
+  pinMode(SS, HIGH);
   pinMode(cspin, OUTPUT);
-  //SPI.begin();
-  //SPI.setBitOrder(MSBFIRST);
-  //SPI.setClockDivider(SPI_CLOCK_DIV16);
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV16);
 }
 /*******************************************************************************
    ans = PressureInit()
@@ -58,11 +58,9 @@ int skLPSxxx::PressureInit()
 
   // デバイスの識別ＩＤをチェックする処理
   PressureReceive(WHO_AM_I_ADRS, &data[0], 1) ;
-  Serial.print("LPSxxxxxID = ");
-  Serial.println(data[0]);
-  // WHO_AM_Iの内容をチェック
-  Serial.print("ID=");
+  Serial.print("skLPSxxID = ");
   Serial.println(data[0], HEX);
+  // WHO_AM_Iの内容をチェック
   if (data[0] == Who_Am_I_ID) {
     ans = 0 ;  // ＩＤは一致した
     Serial.println("ID is correct.");

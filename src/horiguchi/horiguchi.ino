@@ -8,16 +8,16 @@
 #include "wireless.h"
 #include "fall.h"
 
-#define MODE_FALL
-//#define MODE_AGL    //加速度、ジャイロ、気圧
+//#define MODE_FALL
+#define MODE_AGL    //加速度、ジャイロ、気圧
 //#define MODE_ACCEL    //加速度+SD
 //#define MODE_GYRO   //ジャイロ
 //#define MODE_LPS    //気圧
 //#define MODE_SONIC  //超音波
 
-#define accel_cs 7
-#define gyro_cs  10
-#define LPS_cs   10
+#define accel_cs A4
+#define gyro_cs  A2
+#define LPS_cs   A1
 
 #define OFFSET_NUM 1000
 
@@ -65,7 +65,6 @@ void SPI_init()
 
 void sensor_init(void)
 {
-  SPI_init();
   init_gyro(gyro_cs);
   LPS.PressureInit() ;
   init_accel(accel_cs);
@@ -74,17 +73,15 @@ void sensor_init(void)
 #ifdef MODE_FALL
 void setup()
 {
-  Serial.begin(9600);
-  //sensor_init();
-  SPI_init();
-  LPS.PressureInit();
-  pinMode(PARAPIN, OUTPUT);
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
   float p;
-  
-  //wireless_init();
+
+  Serial.begin(9600);
+  pinMode(PARAPIN, OUTPUT);
+  wireless_init();
+  sensor_init();
   setRC_LPS[0] = LPS.getPressure();
   while ((millis() - f) < 10000) {
     pressure_origin = LPS.getPressure();
@@ -170,25 +167,13 @@ void loop()
 
 #ifdef MODE_AGL
 void setup() {
-  delay(1000);
-  Serial.begin(9600);
-  <<< <<< < HEAD
-  pinMode(SS, OUTPUT);
-  //SPI.begin();
-  == == == =
-    sensor_init();
-  >>> >>> > 9522b0b3e3f77640308c32ce9af666f703391e93
-
-  pinMode(9, OUTPUT);
-  pinMode(5, OUTPUT);
-  Serial.println("hello world");
-  SensorInit();
-
-  LPS.PressureRead();
   int j;
   static long f = millis();
   static float setRC_LPS[2] = {0};
 
+  Serial.begin(9600);
+  sensor_init();
+  LPS.PressureRead();
   setRC_LPS[0] = LPS.getPressure();
 
   while ((millis() - f) < 10000) {

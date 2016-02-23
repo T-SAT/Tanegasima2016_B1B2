@@ -44,7 +44,6 @@ void L3GD20_write(byte reg, byte val)
 {
   SPI.setDataMode(SPI_MODE3);
   digitalWrite(L3GD20_CS, LOW);
-  delayMicroseconds(10);
   SPI.transfer(reg);
   SPI.transfer(val);
   digitalWrite(L3GD20_CS, HIGH);
@@ -56,7 +55,6 @@ byte L3GD20_read(byte reg)
 
   SPI.setDataMode(SPI_MODE3);
   digitalWrite(L3GD20_CS, LOW);
-  delayMicroseconds(10);
   SPI.transfer(reg | L3GD20_RW);
   ret = SPI.transfer(0);
   digitalWrite(L3GD20_CS, HIGH);
@@ -112,8 +110,8 @@ void init_gyro(int CS1)
   float avrx, avry, avrz;
 
   avrx = avry = avrz = 0;
-  //SPI.setBitOrder(MSBFIRST);
-  //SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
 
   while (!Serial) {
   }
@@ -127,12 +125,6 @@ void init_gyro(int CS1)
     L3GD20_write(0x36, B00000000);
     L3GD20_write(0x37, B00000000);
   */
-
-  while (!Serial) {
-  }
-
-  Serial.print("L3GD20 ID = ");
-  Serial.println(L3GD20_read(L3GD20_WHOAMI), HEX); // should show D4
 
   L3GD20_write(L3GD20_CTRL1, B11001111);
   //   |||||||+ X axis enable

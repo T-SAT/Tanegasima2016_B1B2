@@ -50,11 +50,11 @@ void init_accel(int cs2)
   //Initiate an SPI communication instance.
 
   //Configure the SPI connection for the ADXL345.
-  //pinMode(SS, OUTPUT);
-  //pinMode(SS, HIGH);
-  //SPI.begin();
-  //SPI.setBitOrder(MSBFIRST);
-  //SPI.setClockDivider(SPI_CLOCK_DIV16); // 8MHz/8 = 1MHz; (max 10MHz)
+  pinMode(SS, OUTPUT);
+  pinMode(SS, HIGH);
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV16); // 8MHz/8 = 1MHz; (max 10MHz)
 
   //Before communication starts, the Chip Select pin needs to be set high.
   digitalWrite(cs2, HIGH);
