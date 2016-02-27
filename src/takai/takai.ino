@@ -1,290 +1,234 @@
-/*
-<<<<<<< HEAD
- 
- #include<SPI.h>
- #include"infrared.h"
- 
- void setup()
- {
- Serial.begin(9600);
- }
- void loop()
- {
- float dis_infrared;
- dis_infrared = measure_infrared();
- Serial.print("dis_infrared = ");
- Serial.print(dis_infrared);
- Serial.println("m");
- delay(300);
- }
- =======
- */
-/*
+#include <stdio.h>
+#include <time.h>
 #include <SPI.h>
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
 #include "gyro.h"
+#include "skLPSxxSPI.h"
 #include "accel.h"
+#include "motor.h"
 
+#define GOAL_LAT 35.515819
+#define GOAL_LON 134.171783 
+#define DEG2RAD (PI/180.0)
+#define RAD2DEG (180.0/PI)
+#define GOAL_RANGE 1.0
 
-void setup() {
-  Serial.begin(9600);
-  SPI.begin();
-  pinMode(SS,OUTPUT);
+#define accel_cs A3
+#define gyro_cs  A1
+#define LPS_cs   A2
 
+#define PGAIN 3.0
+#define IGAIN 0.0
 
-  init_gyro(8);
-  init_accel(3);
-}
+float DestLat, DestLon, OriginLat, OriginLon;
 
-void loop() {
-  float x, y, z;
-  //short x_raw, y_raw, z_raw;
+skLPSxxx LPS(LPS25H, LPS_cs);
+TinyGPSPlus gps;
+SoftwareSerial ss(9, 8); //rx=9,tx=8
 
-  measure_gyro(&x, &y, &z);
-  Serial.print(x);    // X axis (deg/sec)
-  Serial.print("\t");
-  Serial.print(y);    // Y axis (deg/sec)
-  Serial.print("\t");
-  Serial.print(z);  // Z axis (deg/sec)
-  Serial.print("\t\t");
-
-  measure_accel(&x, &y, &z);
-  Serial.print(x);    // X axis (deg/sec)
-  Serial.print("\t");
-  Serial.print(y);    // Y axis (deg/sec)
-  Serial.print("\t");
-  Serial.println(z);  // Z axis (deg/sec)
-
-
-  delay(10);
-}
-*/
-
-#include <SPI.h>
-#include "gyro.h"
-#include <TinyGPS++.h> //GPSデータを受信し終わるまで待機GPS++を使用するためにヘッダファイルをインクルード
-#include <SoftwareSerial.h> //SoftwareSerialを使用するためにヘッダファイルをインクルード
-
-////////////モータ制御ピン/////////////
-#define LFPin 5  //電圧をかけると左のモータが正転するマイコンのピン番号をLFPinとして設定
-#define LBPin 4  //電圧をかけると左のモータが後転するマイコンのピン番号をLBPinとして設定
-#define RFPin 6  //電圧をかけると右のモータが正転するマイコンのピン番号をRFPinとして設定
-#define RBPin 7  //電圧をかけると右のモータが後転するマイコンのピン番号をRBPinとして設定
-////////////////////////////////////////
-
-/////////////ゴール関係//////////////////////
-#define GOAL_LAT 35.517723//ゴール地点の緯度をGOAL_LATとして設定
-#define GOAL_LON 134.171463//ゴール地点の経度をGOAL_LONとして設定
-#define GOAL_RANGE 1
-////////////////ゴール地点の範囲[m]////////////
-
-/////////////ソフトウェアシリアルで使うピン/////////////////////////////////////
-#define SSRX 10    //ソフトウェアシリアルでrxとして使用するピンをSSRXとして設定
-#define SSTX  9    //ソフトウェアシリアルでtxとして使用するピンをSSTXとして設定
-///////////////////////////////////////////////////////////////////////////////////
-
-
-TinyGPSPlus gps;                //座標関係の各種演算をするTinyGPSPlusのオブジェクトを生成
-SoftwareSerial ss(SSRX, SSTX);  //ソフトウェアシリアルのオブジェクトssをrxピンをSSRX(ピン10),txピンをSSTX(ピン9)で設定し、生成する
-
-//////////座標関係///////////////
-float originFlat_deg;    //原点座標：緯度[°]
-float originFlon_deg;    //原点座標：経度[°]
-float currentFlat_deg;   //現在の座標：緯度[°]
-float currentFlon_deg;   //現在の座標：経度[°]
-float goal_angle;       //北の方位を基準にしたゴール地点の角度[°]
-/////////////////////////////////
-//////////制御変数//////////////////////////
-//目標の角速度
-float G_gyro=0;
-//今の角速度
-float current_gyro;
-//微小時間
-unsigned long d_time = 0;
-unsigned long starttime = millis();//時間はここからでもできるのか？
-//軌跡と進行方向との角度
-float angle_trace;
-///////////////////////////////////////////
-////////////////制御定数////////////////////////////
-//神の比例値ｐ
-const float p_gain = 0.6;//例定数。
-const float kd_gain = 0.3;
-const float kq_gain = 0.3;
-const float kw_gain = 0.3;
-const int max_str = 255;  //モータに入力する値の上限値
-const int min_str = 0;   //モータに入力する値の下限値
-const int Lnstr = 255;     //ニュートラル（曲がらず直進する）で進むときの左右のモータに与える入力値
-const int Rnstr = 255;
-////////////////////////////////////////////////////
-
-
-int motor_control(int motorL, int motorR)
+void SPI_init()
 {
-  if(motorL == 0 && motorR == 0) {
-    digitalWrite(LFPin, LOW);
-    digitalWrite(LBPin, LOW);
-    digitalWrite(RFPin, LOW);
-    digitalWrite(RBPin, LOW);
-  }
-  else if (motorL >= 0 && motorR <= 0) {
-    analogWrite(LFPin, motorL);
-    digitalWrite(LBPin, LOW);
-    digitalWrite(RFPin, LOW);
-    analogWrite(RBPin, -motorR);
-  }
-  else if (motorL <= 0 && motorR >= 0) {
-    digitalWrite(LFPin, LOW);
-    analogWrite(LBPin, -motorL);
-    analogWrite(RFPin, motorR);
-    digitalWrite(RBPin, LOW);
-
-  }
-  else if (motorR <= 0 && motorL <= 0) {
-    digitalWrite(LFPin, LOW);
-    analogWrite(LBPin, -motorL);
-    digitalWrite(RFPin, LOW);
-    analogWrite(RBPin, -motorR);
-  }
-  else {
-    analogWrite(LFPin, motorL);
-    digitalWrite(LBPin, LOW);
-    analogWrite(RFPin, motorR);
-    digitalWrite(RBPin, LOW);
-  }
-
-  return (0);
+  digitalWrite(10, HIGH);
+  pinMode(10, OUTPUT);
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE3);
+  SPI.setClockDivider(SPI_CLOCK_DIV8); // 16MHz/8 = 2MHz; (max 10MHz)
 }
-/* GPSデータ受信用関数。少なくともmsミリ秒待つ。（これをしないとモータ動かしたときに変な感じになったらしい）
- * 基本的にrecvGPSは使わずこっちを使うように
- * 引数：unsigned long ms:待つ時間[ms]
- * 返り値：なし
- */
+
+void sensor_init(void)
+{
+  SPI_init();
+  init_gyro(gyro_cs);
+  LPS.PressureInit() ;
+  init_accel(accel_cs);
+}
+
+float PIDcontrol(float command, float current)
+{
+  float controlValue;
+  float error;
+  static float i_error = 0.0;
+
+  error = command - current;
+  i_error += error;
+
+  controlValue = PGAIN*error + IGAIN*i_error;
+  Serial.print("error = ");
+  Serial.print(error);
+  Serial.print("\t");
+  Serial.print("I_error = ");
+  Serial.print(i_error);
+  Serial.print("\t");
+  Serial.print("controlValue = ");
+  Serial.println(controlValue);
+
+  return(controlValue);
+}
+
+float getDt(void)
+{
+  float time;
+  static float lastTime = (float)millis()/1000.0;
+  float currentTime = (float)millis()/1000.0;
+
+  time = currentTime-lastTime;
+  lastTime=(float)millis()/1000.0;
+
+  return(time);
+}
+
+float AngleNormalization(float angle)
+{
+  if(angle>=180)
+    angle =  angle - 360;
+  else if(angle<=-180)
+    angle = angle + 360;
+
+  return(angle);
+}
+
 void gelay(unsigned long ms)
 {
   unsigned long start = millis();
-  do
+  do 
   {
-    while (ss.available())//ポストの中身確認
-      gps.encode(ss.read());//中身ありで読む
+    while (ss.available())
+      gps.encode(ss.read());
   } 
-  while (millis() - start < ms);//1秒待ってやろう
+  while (millis() - start < ms);
 }
 
-void setup() {
-  // put your setup code here, to run once:
-  //モータ制御用のピンを出力で使用できるように設定
-  pinMode(LFPin, OUTPUT);
-  pinMode(LBPin, OUTPUT);
-  pinMode(RFPin, OUTPUT);
-  pinMode(RBPin, OUTPUT);
+void motor_control(int motorL, int motorR)
+{
+  if(motorL<0){
+    digitalWrite(LDIR,HIGH); 
+    motorL = -motorL;
+  }
+  else digitalWrite(LDIR,LOW);
+  if(motorR<0){
+    digitalWrite(RDIR,LOW); 
+    motorR = -motorR;
+  }
+  else digitalWrite(RDIR,HIGH);
+  motorL = constrain(motorL, 0,255);
+  motorR = constrain(motorR, 0,255);
+  analogWrite(LPWM,motorL); 
+  analogWrite(RPWM,motorR);
+}
 
-  //ハードウェアシリアル（備え付けのシリアル通信窓口)を9600[bps]で開始する
+void setup()
+{
+  float x, y, z;
+  float angle1,angle2,angle3;
+  float controlValue;
+  float error;
+  unsigned long distance;
+
   Serial.begin(9600);
-  //ソフトウェアシリアル通信をボーレート9600[bps]で開始する
   ss.begin(9600);
 
-  gelay(1000); //GPSデータを受信し終わるまで待機。だいたい１秒かかる
+  gelay(2000);
+  OriginLat = gps.location.lat();
+  OriginLon = gps.location.lng(); 
 
-  originFlat_deg = gps.location.lat(); //受信した緯度を原点座標の緯度に設定
-  originFlon_deg = gps.location.lng(); //受信した経度を原点座標の経度に設定
+  distance =
+    (unsigned long)TinyGPSPlus::distanceBetween(
+  OriginLat,
+  OriginLon,
+  GOAL_LAT, 
+  GOAL_LON);
 
-  goal_angle = TinyGPSPlus::courseTo(originFlat_deg, originFlon_deg, GOAL_LAT, GOAL_LON); //北の方位から見たゴール座標の角度を求める
+  if(distance<=GOAL_RANGE)
+  {
+    Serial.println("goal");
+    motor_control(0, 0);
+    while(1);
+  }
 
-  //北の方位から見た機体の角度を求めるため、原点座標から10秒間前進して離れる（原点座標にとどまると機体の角度が求められない)
-  motor_control(255, 255);
-  delay(30000);
-  motor_control(0, 0);
+  motor_control(50,50);
+  delay(10000);
+  motor_control(0, 0);  
+  gelay(1000);
+  DestLat=gps.location.lat();
+  DestLon=gps.location.lng();
+  angle1=TinyGPSPlus::courseTo( 
+  OriginLat, OriginLon, DestLat, DestLon);
+  angle2=TinyGPSPlus::courseTo(
+  DestLat, DestLon, GOAL_LAT, GOAL_LON);
+  angle3 = angle1 - angle2; 
+  angle3 = -DEG2RAD*AngleNormalization(angle3);
+  OriginLat = DestLat;
+  OriginLon = DestLon;
+  controlValue = PIDcontrol(0, angle3);
+  controlValue = constrain(controlValue, -77, 77);
+  motor_control(50 - controlValue, 50 + controlValue);
+}
+
+void loop()
+{  
+  float x, y, z;
+  float originLat, originLon;
+  float angle1,angle2,angle3;
+  static float angle = 0;
+  float dt;
+  float controlValue;
+  float error;
+  unsigned long distance;
+
+  //measure_gyro(&x, &y, &z);
+  dt = getDt(); 
+  //angle += z * dt;
+  //angle = DEG2RAD*AngleNormalization(angle);
+  gelay(2000);
+  angle = 0;
+  DestLat=gps.location.lat();
+  DestLon=gps.location.lng(); 
   
-  SPI.begin();
-  pinMode(SS, OUTPUT);
-  digitalWrite(SS, HIGH);
+  distance =
+    (unsigned long)TinyGPSPlus::distanceBetween(
+  DestLat,
+  DestLon,
+  GOAL_LAT, 
+  GOAL_LON);
 
-  init_gyro(8);//pin番号上に書けそう
-   
+  if(distance<=GOAL_RANGE)
+  {
+    Serial.println("goal");
+    motor_control(0, 0);
+    while(1);
+  }
+
+
+  angle1 = TinyGPSPlus::courseTo( 
+  OriginLat, OriginLon, DestLat, DestLon); 
+  angle2 = TinyGPSPlus::courseTo(
+  OriginLat, OriginLon, GOAL_LAT, GOAL_LON);
+
+  angle3 = angle1 - angle2;
+  angle3 = -DEG2RAD*AngleNormalization(angle3);
+  error = angle3 - angle;
+
+  controlValue = PIDcontrol(0, error);
+  controlValue = constrain(controlValue, -77, 77);
+  Serial.print("controlValue = ");
+  Serial.println(controlValue);
+  motor_control(50 -controlValue, 50 + controlValue);
+  OriginLat = DestLat;
+  OriginLon = DestLon;
 }
 
-void loop() {
-    unsigned long int distance_m;  //機体の現在地からゴールまでの距離
-    unsigned long int distance_o;  //原点から現在地までの距離
-    long int distance_trace;        //現在地から軌跡までの距離
-    float current_angle;           //機体から見たゴールの座標(-180～180)[°]
-    float control_value;
-    float x,y,z;                   //角速度、多分ｚしか使わないだろう・・
-    int count = 1;                 //原点とゴールを結ぶ直線とローバーの進行方向との角度をとるのに使う（もっといい案があるかも）
-    
-    gelay(1000); //GPSデータを受信し終わるまで待機
-    currentFlat_deg = gps.location.lat();  //受信した座標の緯度を現在地の座標の緯度として設定
-    currentFlon_deg = gps.location.lng();  //受信した座標の経度を現在地の座標の経度として設定
 
-    //現在地からゴールまでの距離を求める
-    distance_m = (unsigned long)TinyGPSPlus::distanceBetween(currentFlat_deg, currentFlon_deg,
-    GOAL_LAT, GOAL_LON);
-    Serial.print("dis ="); 
-    Serial.println(distance_m);
-   //求めた距離が0だったらその地点がゴールなので終了
-   if (distance_m <= GOAL_RANGE) {
-     Serial.println("goal");
-     motor_control(0, 0);
-     while(1);
-   }
 
-   //北の方位から見たときの現在の機体の角度を求める(-360～360)
-   current_angle = TinyGPSPlus::courseTo(originFlat_deg, originFlon_deg, currentFlat_deg, currentFlon_deg);
 
-   current_angle = goal_angle - current_angle;  //機体からみたときのゴール地点への角度を計算する
 
-   //ゴールから機体までの角度を範囲(-180～180)の範囲に変換
-   if(current_angle > 180) current_angle = current_angle - 360;
-   else if(current_angle < -180) current_angle = current_angle + 360;
-   
-   //最初の軌跡(原点とゴールを結ぶ線)と進行方向との角度
-   if(count == 1)   //最初の一回だけはcurrent_angleと同じなので
-   {
-     angle_trace = current_angle;
-     count = count + 1;   //二回目以降は違うので華麗にスルー(void setupに書くと多くなりそうだったのでこっちに)
-   }
 
-   distance_o = (unsigned long)TinyGPSPlus::distanceBetween(originFlat_deg,originFlon_deg,currentFlat_deg, currentFlon_deg);
-   //原点座標から現在の座標までの距離（上)
-   distance_trace =distance_o * sin(current_angle);//現在の座標から軌跡までの距離
-   
-    //角速度
-    measure_gyro(&x, &y, &z);
-    current_gyro = z;//反時計回りって(ー)の値でたっけ？
-    current_gyro = G_gyro - current_gyro;//
-    
-    //微小時間計算
-    d_time = (millis() - starttime) / 1000 - d_time;
-    
-    //最適角速度計算
-    G_gyro = z + d_time * ( - kd_gain * (-distance_trace) - kq_gain * (-angle_trace) - kw_gain * (-current_gyro));
-    
-   
-    //軌跡と進行方向との角度
-    angle_trace = angle_trace - z * d_time ;//ジャイロセンサに依存(途中でなんか補正できれば...)
-    
-    Serial.print("gyro_z = ");//ローバーの角速度
-    Serial.println(z);
-    Serial.print("distance_trace = ");//ローバーと直線の距離
-    Serial.println(distance_trace);
-    Serial.print("angle_trace = ");//進行方向と直線との角度
-    Serial.println(angle_trace);
-    Serial.print("G_gyro = "); //最適角速度
-    Serial.println(G_gyro);
-    control_value = p_gain * G_gyro;
- 
-    if (control_value < 0)
-    control_value = -constrain(abs(control_value), min_str, max_str);
-    else
-    control_value = constrain(abs(control_value), min_str, max_str);
-    
-    Serial.print("control_value = "); 
-    Serial.println(control_value);
- 
-    if (control_value < 0)
-    motor_control( Lnstr - abs(control_value ) ,Rnstr);
-    else
-    motor_control( Lnstr , Rnstr - abs(control_value));
 
-}
+
+
+
+
+
 
 

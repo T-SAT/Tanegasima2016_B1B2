@@ -7,7 +7,6 @@ int L3GD20_CS;
 //const int MISO = 12;
 //const int SCK  = 13;
 
-short offsetxGyro, offsetyGyro, offsetzGyro;
 
 const byte L3GD20_WHOAMI = 0x0f;
 const byte L3GD20_CTRL1 = 0x20;
@@ -25,7 +24,7 @@ const byte L3GD20_Z_H = 0x2D;
 const byte L3GD20_RW = 0x80;
 const byte L3GD20_MS = 0x40;
 
-
+static float offsetx, offsety, offsetz;
 //////write your code///////
 void L3GD20_write(byte reg, byte val)
 {
@@ -64,18 +63,19 @@ void measure_gyro(float *x, float *y, float *z)
   short x_raw, y_raw, z_raw;
   get_gyro(&x_raw, &y_raw, &z_raw);
 
-  *x = (float)(x_raw - offsetxGyro) * 0.00875; // +-250dps
+  *x = (float)(x_raw - offsetx) * 0.00875; // +-250dps
   //x *= 0.0175;// +-500dps
-  //x *= 0.07;  // +-2000dps
-  *y = (float)(y_raw - offsetyGyro) * 0.00875; // +-250dps
-  *z = (float)(z_raw - offsetzGyro) * 0.00875; // +-250dps
+  //x *= 07;  // +-2000dps
+  *y = (float)(y_raw - offsety) * 0.00875; // +-250dps
+  *z = (float)(z_raw - offsetz) * 0.00875; // +-250dps
 
 }
 
 void init_gyro(int CS1)
 {
-  pinMode(CS1, OUTPUT);
   digitalWrite(CS1, HIGH);
+
+  pinMode(CS1, OUTPUT);
 
   L3GD20_CS = CS1;
 
@@ -85,22 +85,22 @@ void init_gyro(int CS1)
 
   avrx = avry = avrz = 0;
 
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV8); // 8MHz/8 = 1MHz; (max 10MHz)
-
-
   while (!Serial) {
   }
 
+  Serial.print("L3GD20 ID = ");
   Serial.println(L3GD20_read(L3GD20_WHOAMI), HEX); // should show D4
 
-  L3GD20_write(L3GD20_CTRL1, B00001111);
+  L3GD20_write(L3GD20_CTRL1, B11001111);
   //   |||||||+ X axis enable
   //   ||||||+- Y axis enable
   //   |||||+-- Z axis enable
   //   ||||+--- PD: 0: power down, 1: active
-  //   ||++---- BW1-BW0: cut off 12.5[Hz]
-  //   ++------ DR1-DR0: ODR 95[HZ]
+  //   ||++---- BW1-BW0: cut off [Hz]
+  //   ++------ DR1-DR0: ODR 760[HZ]
+
+  L3GD20_write(L3GD20_CTRL2, B00000100);
+  L3GD20_write(L3GD20_CTRL5, B00010000);
 
   for (i = 0; i < OFFSET_NUM; i++)
   {
@@ -109,8 +109,8 @@ void init_gyro(int CS1)
     avry += tmpy;
     avrz += tmpz;
   }
-  offsetxGyro = avrx / OFFSET_NUM;
-  offsetyGyro = avry / OFFSET_NUM;
-  offsetzGyro = avrz / OFFSET_NUM;
+  offsetx = avrx / OFFSET_NUM;
+  offsety = avry / OFFSET_NUM;
+  offsetz = avrz / OFFSET_NUM;
 }
 
