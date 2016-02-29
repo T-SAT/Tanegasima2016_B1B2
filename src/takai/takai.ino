@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <time.h>
 #include <SPI.h>
 #include <SD.h>
 #include <TinyGPS++.h>
@@ -134,6 +132,8 @@ void setup()
   float pressure_origin;
   unsigned long f;
   float data[7];
+  float GPSdata[2];
+  
   
   Serial.begin(9600);
   ss.begin(9600);
@@ -186,8 +186,9 @@ void setup()
   
   delay(10000);
   gelay(2000);
-  OriginLat = gps.location.lat();
-  OriginLon = gps.location.lng(); 
+  GPSdata[0]=OriginLat = gps.location.lat();
+  GPSdata[1]=OriginLon = gps.location.lng(); 
+  saveLog("GPS", GPSdata, 2); 
     Serial.print("OriginLat=");
     Serial.print(OriginLat);
     Serial.print("\t");
@@ -212,8 +213,9 @@ void setup()
   delay(10000);
   motor_control(0, 0);  
   gelay(1000);
-  DestLat=gps.location.lat();
-  DestLon=gps.location.lng();
+  GPSdata[0]=DestLat=gps.location.lat();
+  GPSdata[1]=DestLon=gps.location.lng();
+  saveLog("GPS", GPSdata, 2); 
   angle1=TinyGPSPlus::courseTo( 
   OriginLat, OriginLon, DestLat, DestLon);
   angle2=TinyGPSPlus::courseTo(
@@ -237,6 +239,7 @@ void loop()
   float controlValue;
   float error;
   unsigned long distance;
+  float GPSdata[2];
 
   //measure_gyro(&x, &y, &z);
   dt = getDt(); 
@@ -244,8 +247,9 @@ void loop()
   //angle = DEG2RAD*AngleNormalization(angle);
   gelay(2000);
   angle = 0;
-  DestLat=gps.location.lat();
-  DestLon=gps.location.lng(); 
+  GPSdata[0]=DestLat=gps.location.lat();
+  GPSdata[1]=DestLon=gps.location.lng();  
+  saveLog("GPS", GPSdata, 2); 
   
   distance =
     (unsigned long)TinyGPSPlus::distanceBetween(
