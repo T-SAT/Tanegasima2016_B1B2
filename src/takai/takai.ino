@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <time.h>
 #include <SPI.h>
+#include <SD.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 #include "gyro.h"
 #include "skLPSxxSPI.h"
 #include "accel.h"
 #include "motor.h"
+#include "fall.h"
+#include "wireless.h"
+#include "sd.h"
 
 #define GOAL_LAT 35.515819
 #define GOAL_LON 134.171783 
@@ -125,13 +129,70 @@ void setup()
   float controlValue;
   float error;
   unsigned long distance;
-
+  static float RC_LPS[2] = {0};
+  float p;
+  float pressure_origin;
+  unsigned long f;
+  float data[7];
+  
   Serial.begin(9600);
   ss.begin(9600);
-
+  wireless_init();
+  sensor_init();
+  
+  LPS.PressureRead();
+  f = millis();
+  RC_LPS[0] = LPS.getPressure();
+  while ((millis() - f) < 10000) {
+    LPS.getPressure();
+    pressure_origin = LPS.getPressure();
+    RC_LPS[1] = 0.99 * RC_LPS[0] + 0.01 * pressure_origin;
+    pressure_origin = RC_LPS[1];
+    RC_LPS[0] = RC_LPS[1];
+  }
+  RC_LPS[0] = 0;
+  
+  while(1) {
+    measure_gyro(&x, &y, &z);
+    data[0] = x;
+    data[1] = y;
+    data[2] = z;
+    float h, t, p;
+    LPS.PressureRead();
+    data[3] = t = LPS.getTempreture();
+    data[4] = p = LPS.getPressure();
+    data[5] = h = LPS.AltitudeCalc(pressure_origin, p);
+    RC_LPS[1] = 0.9 * RC_LPS[0] + 0.1 * h;
+    RC_LPS[0] = RC_LPS[1];
+    data[6] = RC_LPS[1];
+    transferData(data, 7);
+    saveLog("PH.csv", data, 7);
+    Serial.print("t=");
+    Serial.print(t);
+    Serial.print("\t");
+    Serial.print("p=");
+    Serial.print(p);
+    Serial.print("\t");
+    Serial.print("RC_LPS[1];=");
+    Serial.print(RC_LPS[1]);
+    Serial.print("\t");
+    Serial.print("z=");
+    Serial.println(z);
+    if(check_st(RC_LPS[1]) == ST_LAND) {
+      release_para();
+      break;
+    }
+  }
+  
+  delay(10000);
   gelay(2000);
   OriginLat = gps.location.lat();
   OriginLon = gps.location.lng(); 
+    Serial.print("OriginLat=");
+    Serial.print(OriginLat);
+    Serial.print("\t");
+    Serial.print("OriginLon=");
+    Serial.println(OriginLon);
 
   distance =
     (unsigned long)TinyGPSPlus::distanceBetween(
