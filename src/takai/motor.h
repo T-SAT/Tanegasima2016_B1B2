@@ -7,10 +7,10 @@
 #include "WProgram.h"
 #endif
 
-#define LDIR 7
-#define LPWM 6
-#define RPWM 5
-#define RDIR 4
+#define LDIR 5
+#define LPWM 4
+#define RPWM 6
+#define RDIR 7
 
 /*
  *  motorL,motorRが正なら前進、負なら後退、0なら停止

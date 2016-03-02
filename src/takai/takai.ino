@@ -23,6 +23,15 @@
 #define PGAIN 3.0
 #define IGAIN 0.0
 
+#define L_PWM 5  //L_DIRをLOWにすると左のモータが正転する
+#define L_DIR 4  //L_DIRをHIGHにすると左のモータが後転する
+#define R_PWM 6  //R_DIRをHIGHにすると右のモータが正転する
+#define R_DIR 7  //R_DIRをLOWにすると右のモータが後転する
+////////////////////////////////////////
+
+#define TEST
+//#define RUN
+
 float DestLat, DestLon, OriginLat, OriginLon;
 
 skLPSxxx LPS(LPS25H, LPS_cs);
@@ -120,6 +129,7 @@ void motor_control(int motorL, int motorR)
   analogWrite(RPWM,motorR);
 }
 
+#ifdef RUN
 void setup()
 {
   float x, y, z;
@@ -127,19 +137,19 @@ void setup()
   float controlValue;
   float error;
   unsigned long distance;
-  static float RC_LPS[2] = {0};
+  static float RC_LPS[2] = {
+    0  };
   float p;
   float pressure_origin;
   unsigned long f;
   float data[7];
   float GPSdata[2];
-  
-  
+
   Serial.begin(9600);
   ss.begin(9600);
   wireless_init();
   sensor_init();
-  
+
   LPS.PressureRead();
   f = millis();
   RC_LPS[0] = LPS.getPressure();
@@ -151,7 +161,7 @@ void setup()
     RC_LPS[0] = RC_LPS[1];
   }
   RC_LPS[0] = 0;
-  
+
   while(1) {
     measure_gyro(&x, &y, &z);
     data[0] = x;
@@ -183,17 +193,17 @@ void setup()
       break;
     }
   }
-  
+
   delay(10000);
   gelay(2000);
   GPSdata[0]=OriginLat = gps.location.lat();
   GPSdata[1]=OriginLon = gps.location.lng(); 
   saveLog("GPS", GPSdata, 2); 
-    Serial.print("OriginLat=");
-    Serial.print(OriginLat);
-    Serial.print("\t");
-    Serial.print("OriginLon=");
-    Serial.println(OriginLon);
+  Serial.print("OriginLat=");
+  Serial.print(OriginLat);
+  Serial.print("\t");
+  Serial.print("OriginLon=");
+  Serial.println(OriginLon);
 
   distance =
     (unsigned long)TinyGPSPlus::distanceBetween(
@@ -250,7 +260,7 @@ void loop()
   GPSdata[0]=DestLat=gps.location.lat();
   GPSdata[1]=DestLon=gps.location.lng();  
   saveLog("GPS", GPSdata, 2); 
-  
+
   distance =
     (unsigned long)TinyGPSPlus::distanceBetween(
   DestLat,
@@ -284,9 +294,29 @@ void loop()
   OriginLon = DestLon;
 }
 
+#endif
 
+#ifdef TEST
+void setup()
+{
+  pinMode(L_PWM, OUTPUT);
+  pinMode(L_DIR, OUTPUT);
+  pinMode(R_PWM, OUTPUT);
+  pinMode(R_DIR, OUTPUT);
 
+  digitalWrite(L_PWM, LOW);
+  digitalWrite(L_DIR, LOW);
+  digitalWrite(R_PWM, LOW);
+  digitalWrite(R_DIR, LOW);
 
+}
+
+void loop()
+{
+  digitalWrite(R_DIR, HIGH);
+  analogWrite(R_PWM, 50); 
+}
+#endif
 
 
 
